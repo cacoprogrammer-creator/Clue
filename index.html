@@ -3,154 +3,163 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Clue Tracker</title>
+  <title>Clue Custom Board Builder</title>
   <style>
     :root {
-      --bg: #0f172a;
-      --panel: #111827;
-      --panel-2: #1f2937;
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --accent: #a78bfa;
-      --good: #16a34a;
-      --bad: #dc2626;
-      --unknown: #64748b;
-      --border: rgba(255,255,255,0.08);
+      --bg: #120c08;
+      --panel: #201610;
+      --panel-2: #2a1d16;
+      --panel-3: #3a291f;
+      --gold: #d8b36a;
+      --gold-soft: #f0d8a0;
+      --paper: #efe1bf;
+      --ink: #20150d;
+      --text: #f8f1e4;
+      --muted: #ccb893;
+      --accent: #8b1e1e;
+      --good: #2d8a56;
+      --bad: #9c2f2f;
+      --maybe: #7b6a58;
+      --border: rgba(240, 216, 160, 0.18);
+      --shadow: 0 20px 60px rgba(0,0,0,0.35);
     }
 
     * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: linear-gradient(180deg, #0b1120 0%, #111827 100%);
+      font-family: Georgia, "Times New Roman", serif;
       color: var(--text);
+      background:
+        radial-gradient(circle at top, rgba(139,30,30,0.18), transparent 28%),
+        linear-gradient(180deg, #0f0a07, #19110d 45%, #0f0a07);
+      min-height: 100vh;
     }
 
     .wrap {
-      width: min(1100px, calc(100% - 24px));
+      width: min(1360px, calc(100% - 20px));
       margin: 0 auto;
-      padding: 20px 0 64px;
+      padding: 18px 0 40px;
+    }
+
+    .hero, .panel, .envelope {
+      box-shadow: var(--shadow);
     }
 
     .hero {
-      background: rgba(17,24,39,0.9);
+      background: linear-gradient(180deg, rgba(42,29,22,0.96), rgba(26,18,14,0.98));
       border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 24px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.25);
-      margin-bottom: 18px;
+      border-radius: 28px;
+      padding: 22px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .hero::before,
+    .hero::after {
+      content: "";
+      position: absolute;
+      border: 1px solid rgba(216,179,106,0.22);
+      pointer-events: none;
+      border-radius: 22px;
+    }
+
+    .hero::before { inset: 10px; }
+    .hero::after { inset: 18px; }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 18px;
+      align-items: center;
     }
 
     h1 {
-      margin: 0 0 8px;
-      font-size: clamp(1.8rem, 3vw, 2.8rem);
-    }
-
-    .sub {
-      color: var(--muted);
       margin: 0;
-      line-height: 1.5;
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--gold-soft);
     }
 
-    .toolbar, .top-actions {
+    .subtitle {
+      margin: 10px 0 0;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 760px;
+      font-size: 1rem;
+    }
+
+    .case-box {
+      background: rgba(0,0,0,0.18);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 16px;
+    }
+
+    .case-box h2,
+    .panel h2,
+    .envelope h3 {
+      margin: 0 0 12px;
+      font-size: 1rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gold-soft);
+    }
+
+    .toolbar {
       display: flex;
-      gap: 10px;
       flex-wrap: wrap;
-      margin-top: 18px;
+      gap: 10px;
+      margin-top: 16px;
     }
 
-    button, .ghost-link {
+    button {
       appearance: none;
       border: 1px solid var(--border);
-      background: var(--panel-2);
+      background: linear-gradient(180deg, #3a291f, #251912);
       color: var(--text);
-      padding: 10px 14px;
-      border-radius: 12px;
+      padding: 11px 14px;
+      border-radius: 14px;
       cursor: pointer;
       font: inherit;
-      text-decoration: none;
+      font-size: 0.96rem;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.18);
     }
 
     button.primary {
-      background: var(--accent);
-      color: #140f2c;
-      border-color: transparent;
+      background: linear-gradient(180deg, #b48b43, #8a652e);
+      color: #20150d;
       font-weight: 700;
     }
 
-    .grid {
-      display: grid;
-      gap: 18px;
-      grid-template-columns: 1.2fr 0.8fr;
+    button.small {
+      padding: 8px 11px;
+      font-size: 0.9rem;
     }
 
-    .panel {
-      background: rgba(17,24,39,0.9);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 18px;
-    }
-
-    .panel h2 {
-      margin: 0 0 12px;
-      font-size: 1.1rem;
-    }
-
-    .muted {
-      color: var(--muted);
-      font-size: 0.95rem;
-    }
-
-    .tracker-group {
-      margin-bottom: 18px;
-    }
-
-    .tracker-group h3 {
-      margin: 0 0 8px;
-      font-size: 1rem;
-      color: #ddd6fe;
-    }
-
-    .item-row {
-      display: grid;
-      grid-template-columns: 1.4fr 110px 1fr;
-      gap: 10px;
+    .status-line, .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
       align-items: center;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 10px;
-      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 0.94rem;
+      margin-top: 14px;
     }
 
-    .item-row input[type="text"], textarea, select {
-      width: 100%;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: #0b1220;
-      color: var(--text);
-      padding: 10px 12px;
-      font: inherit;
-    }
-
-    textarea {
-      min-height: 180px;
-      resize: vertical;
-      line-height: 1.45;
-    }
-
-    .status-has { border-color: rgba(22,163,74,0.65); }
-    .status-not { border-color: rgba(220,38,38,0.65); }
-    .status-maybe { border-color: rgba(100,116,139,0.65); }
-
-    .status-chip {
+    .legend span {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      font-size: 0.92rem;
-      color: var(--muted);
-      margin-top: 8px;
+      padding: 6px 10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 0.9rem;
     }
 
     .dot {
@@ -162,151 +171,356 @@
 
     .dot.has { background: var(--good); }
     .dot.not { background: var(--bad); }
-    .dot.maybe { background: var(--unknown); }
+    .dot.maybe { background: #9a8466; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: .95fr 1.05fr;
+      gap: 16px;
+    }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(32,22,16,0.98), rgba(22,15,11,0.98));
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 18px;
+    }
+
+    .builder-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.92rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid rgba(240,216,160,0.16);
+      background: #130d0a;
+      color: var(--text);
+      padding: 10px 12px;
+      font: inherit;
+      font-size: 0.95rem;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .share-box {
+      background: rgba(0,0,0,0.14);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 12px;
+    }
+
+    .share-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .tiny {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .casefile-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .category-card {
+      background: linear-gradient(180deg, rgba(58,41,31,0.55), rgba(37,25,18,0.72));
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .category-head {
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid rgba(240,216,160,0.12);
+      background: rgba(0,0,0,0.08);
+    }
+
+    .category-head h3 {
+      margin: 0;
+      font-size: 1rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--gold-soft);
+    }
+
+    .item-list {
+      padding: 10px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .item {
+      background: rgba(0,0,0,0.14);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 10px;
+    }
+
+    .item-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .item-name {
+      font-size: 0.98rem;
+      line-height: 1.25;
+    }
+
+    .item.status-has { border-color: rgba(45,138,86,0.85); }
+    .item.status-not { border-color: rgba(156,47,47,0.88); }
+    .item.status-maybe { border-color: rgba(240,216,160,0.13); }
+
+    .right-stack {
+      display: grid;
+      gap: 16px;
+    }
+
+    .envelope {
+      background: linear-gradient(180deg, #f1e4c6, #ddc79d);
+      color: var(--ink);
+      border-radius: 22px;
+      padding: 18px;
+      border: 1px solid rgba(0,0,0,0.12);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 0 18px 40px rgba(0,0,0,0.26);
+    }
+
+    .envelope input {
+      background: rgba(255,255,255,0.55);
+      color: var(--ink);
+      border: 1px solid rgba(0,0,0,0.12);
+    }
+
+    .solution-grid {
+      display: grid;
+      gap: 10px;
+    }
 
     .stats {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 10px;
-      margin-top: 12px;
     }
 
     .stat {
       background: rgba(255,255,255,0.04);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 12px;
+      border-radius: 16px;
+      padding: 14px;
     }
 
     .stat strong {
       display: block;
-      font-size: 1.4rem;
+      font-size: 1.5rem;
+      color: var(--gold-soft);
       margin-bottom: 4px;
     }
 
-    .footer-note {
-      margin-top: 16px;
-      color: var(--muted);
-      font-size: 0.9rem;
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 1200px) {
+      .layout, .hero-inner { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 900px) {
-      .grid { grid-template-columns: 1fr; }
+      .casefile-grid { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: 1fr; }
     }
 
-    @media (max-width: 620px) {
-      .item-row {
-        grid-template-columns: 1fr;
-      }
-      .stats {
-        grid-template-columns: 1fr;
-      }
-      .wrap {
-        width: min(100% - 16px, 1100px);
-      }
-      .hero, .panel {
-        border-radius: 18px;
-      }
+    @media (max-width: 700px) {
+      .wrap { width: min(100% - 12px, 1360px); }
+      .hero, .panel { border-radius: 20px; }
+      .share-row { grid-template-columns: 1fr; }
+      h1 { font-size: 2rem; }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
     <section class="hero">
-      <h1>Clue Tracker</h1>
-      <p class="sub">One website, separate board for each person. This version saves privately in each visitor’s browser, so everyone starts from the same template but keeps their own notes.</p>
-      <div class="top-actions">
-        <button class="primary" id="resetBtn">Reset My Board</button>
-        <button id="exportBtn">Export My Notes</button>
-        <button id="importBtn">Import My Notes</button>
-        <input id="importFile" type="file" accept="application/json" hidden />
-      </div>
-      <div class="status-chip">
-        <span class="dot maybe"></span>
-        <span id="saveStatus">Saved automatically on this device.</span>
+      <div class="hero-inner">
+        <div>
+          <h1>Clue Custom Board Builder</h1>
+          <p class="subtitle">Create a custom game once, generate a share link, and everyone who opens that link gets the same board template with their own private notes.</p>
+          <div class="toolbar">
+            <button class="primary" id="buildLinkBtn">Generate Share Link</button>
+            <button id="useClassicBtn">Load Classic Clue</button>
+            <button id="resetNotesBtn">Reset My Notes</button>
+            <button id="exportBtn">Export My Notes</button>
+            <button id="importBtn">Import My Notes</button>
+            <input id="importFile" type="file" accept="application/json" hidden />
+          </div>
+          <div class="status-line">
+            <span id="saveStatus">Saved automatically on this device.</span>
+          </div>
+          <div class="legend">
+            <span><i class="dot has"></i> Has / Seen</span>
+            <span><i class="dot not"></i> Ruled Out</span>
+            <span><i class="dot maybe"></i> Still Possible</span>
+          </div>
+        </div>
+        <div class="case-box">
+          <h2>How the custom version works</h2>
+          <div class="tiny">The board setup lives in the URL. That means one person can build a custom board, click generate, and send the link to everyone else. Each person gets the same board, but their deductions stay separate on their own device.</div>
+        </div>
       </div>
     </section>
 
-    <div class="grid">
+    <div class="layout">
       <section class="panel">
-        <h2>Your tracker</h2>
-        <p class="muted">Tip: use <strong>Has</strong>, <strong>Not it</strong>, and <strong>Maybe</strong> as your quick labels.</p>
-        <div id="tracker"></div>
-      </section>
-
-      <aside class="panel">
-        <h2>Notes</h2>
-        <textarea id="generalNotes" placeholder="Write turn-by-turn notes, theories, and who showed what..."></textarea>
-
-        <div class="stats">
-          <div class="stat">
-            <strong id="hasCount">0</strong>
-            <span class="muted">Marked Has</span>
+        <h2>Board builder</h2>
+        <div class="builder-grid">
+          <div>
+            <label for="boardName">Board name</label>
+            <input id="boardName" placeholder="Mansion Mystery Night" />
           </div>
-          <div class="stat">
-            <strong id="notCount">0</strong>
-            <span class="muted">Marked Not it</span>
+          <div>
+            <label for="suspectsInput">Characters / suspects (one per line)</label>
+            <textarea id="suspectsInput"></textarea>
           </div>
-          <div class="stat">
-            <strong id="maybeCount">0</strong>
-            <span class="muted">Still Maybe</span>
+          <div>
+            <label for="weaponsInput">Weapons / items (one per line)</label>
+            <textarea id="weaponsInput"></textarea>
+          </div>
+          <div>
+            <label for="roomsInput">Rooms / locations (one per line)</label>
+            <textarea id="roomsInput"></textarea>
+          </div>
+          <div class="share-box">
+            <label for="shareLink">Share link</label>
+            <div class="share-row">
+              <input id="shareLink" readonly placeholder="Click Generate Share Link" />
+              <button class="small" id="copyLinkBtn">Copy Link</button>
+            </div>
+            <div class="tiny" id="shareHint">Anyone who opens this link gets this board template.</div>
           </div>
         </div>
+      </section>
 
-        <p class="footer-note">This starter file is built as a single <code>index.html</code> page so it’s easy to host for free on GitHub Pages.</p>
-      </aside>
+      <section class="right-stack">
+        <section class="envelope">
+          <h3>Final accusation</h3>
+          <div class="solution-grid">
+            <input id="solutionSuspect" placeholder="Suspect" />
+            <input id="solutionWeapon" placeholder="Weapon" />
+            <input id="solutionRoom" placeholder="Room" />
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Turn log</h2>
+          <textarea id="generalNotes" placeholder="Example: Turn 3 — I guessed Plum, Rope, Library. Jordan showed one card. I know it was not Rope because I have Rope."></textarea>
+        </section>
+
+        <section class="panel">
+          <h2>Case summary</h2>
+          <div class="stats">
+            <div class="stat">
+              <strong id="hasCount">0</strong>
+              <span class="tiny">Has / Seen</span>
+            </div>
+            <div class="stat">
+              <strong id="notCount">0</strong>
+              <span class="tiny">Ruled Out</span>
+            </div>
+            <div class="stat">
+              <strong id="maybeCount">0</strong>
+              <span class="tiny">Still Possible</span>
+            </div>
+          </div>
+        </section>
+      </section>
     </div>
+
+    <section class="panel" style="margin-top:16px;">
+      <h2 id="boardTitle">Case board</h2>
+      <div class="casefile-grid" id="tracker"></div>
+    </section>
   </div>
 
   <script>
-    const STORAGE_KEY = 'clue-tracker-v1';
-
-    const TEMPLATE = {
-      suspects: [
-        'Miss Scarlet',
-        'Colonel Mustard',
-        'Mrs. White',
-        'Mr. Green',
-        'Mrs. Peacock',
-        'Professor Plum'
-      ],
-      weapons: [
-        'Candlestick',
-        'Knife',
-        'Lead Pipe',
-        'Revolver',
-        'Rope',
-        'Wrench'
-      ],
-      rooms: [
-        'Kitchen',
-        'Ballroom',
-        'Conservatory',
-        'Dining Room',
-        'Billiard Room',
-        'Library',
-        'Lounge',
-        'Hall',
-        'Study'
-      ]
+    const CLASSIC_TEMPLATE = {
+      boardName: 'Classic Clue',
+      suspects: ['Miss Scarlet', 'Colonel Mustard', 'Mrs. White', 'Mr. Green', 'Mrs. Peacock', 'Professor Plum'],
+      weapons: ['Candlestick', 'Knife', 'Lead Pipe', 'Revolver', 'Rope', 'Wrench'],
+      rooms: ['Kitchen', 'Ballroom', 'Conservatory', 'Dining Room', 'Billiard Room', 'Library', 'Lounge', 'Hall', 'Study']
     };
 
-    function blankState() {
-      const makeItems = (items) => items.map(name => ({ name, status: 'maybe', note: '' }));
+    function parseLines(text) {
+      return text.split('\n').map(x => x.trim()).filter(Boolean);
+    }
+
+    function uniqueKeyFromTemplate(template) {
+      return 'clue-custom-' + btoa(unescape(encodeURIComponent(JSON.stringify(template)))).slice(0, 80);
+    }
+
+    function encodeTemplate(template) {
+      return btoa(unescape(encodeURIComponent(JSON.stringify(template))));
+    }
+
+    function decodeTemplate(encoded) {
+      try {
+        return JSON.parse(decodeURIComponent(escape(atob(encoded))));
+      } catch {
+        return null;
+      }
+    }
+
+    function getTemplateFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const encoded = params.get('board');
+      if (!encoded) return CLASSIC_TEMPLATE;
+      const parsed = decodeTemplate(encoded);
+      return parsed && parsed.suspects && parsed.weapons && parsed.rooms ? parsed : CLASSIC_TEMPLATE;
+    }
+
+    let currentTemplate = getTemplateFromUrl();
+    let STORAGE_KEY = uniqueKeyFromTemplate(currentTemplate);
+
+    function blankState(template) {
+      const makeItems = items => items.map(name => ({ name, status: 'maybe', note: '' }));
       return {
-        suspects: makeItems(TEMPLATE.suspects),
-        weapons: makeItems(TEMPLATE.weapons),
-        rooms: makeItems(TEMPLATE.rooms),
-        generalNotes: ''
+        boardName: template.boardName || 'Custom Board',
+        suspects: makeItems(template.suspects || []),
+        weapons: makeItems(template.weapons || []),
+        rooms: makeItems(template.rooms || []),
+        generalNotes: '',
+        solutionSuspect: '',
+        solutionWeapon: '',
+        solutionRoom: ''
       };
     }
 
     function loadState() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? JSON.parse(raw) : blankState();
+        return raw ? JSON.parse(raw) : blankState(currentTemplate);
       } catch {
-        return blankState();
+        return blankState(currentTemplate);
       }
     }
 
@@ -318,92 +532,170 @@
       updateStats();
     }
 
+    function fillBuilderFromTemplate(template) {
+      document.getElementById('boardName').value = template.boardName || '';
+      document.getElementById('suspectsInput').value = (template.suspects || []).join('\n');
+      document.getElementById('weaponsInput').value = (template.weapons || []).join('\n');
+      document.getElementById('roomsInput').value = (template.rooms || []).join('\n');
+    }
+
+    function templateFromBuilder() {
+      return {
+        boardName: document.getElementById('boardName').value.trim() || 'Custom Board',
+        suspects: parseLines(document.getElementById('suspectsInput').value),
+        weapons: parseLines(document.getElementById('weaponsInput').value),
+        rooms: parseLines(document.getElementById('roomsInput').value)
+      };
+    }
+
     function sectionTitle(key) {
       return key.charAt(0).toUpperCase() + key.slice(1);
     }
 
-    function render() {
-      const tracker = document.getElementById('tracker');
-      tracker.innerHTML = '';
+    function renderCategory(section) {
+      const card = document.createElement('div');
+      card.className = 'category-card';
 
-      ['suspects', 'weapons', 'rooms'].forEach(section => {
-        const group = document.createElement('div');
-        group.className = 'tracker-group';
+      const head = document.createElement('div');
+      head.className = 'category-head';
+      head.innerHTML = `<h3>${sectionTitle(section)}</h3>`;
 
-        const title = document.createElement('h3');
-        title.textContent = sectionTitle(section);
-        group.appendChild(title);
+      const list = document.createElement('div');
+      list.className = 'item-list';
 
-        state[section].forEach((item, index) => {
-          const row = document.createElement('div');
-          row.className = `item-row status-${item.status === 'has' ? 'has' : item.status === 'not' ? 'not' : 'maybe'}`;
+      state[section].forEach((item, index) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = `item status-${item.status === 'has' ? 'has' : item.status === 'not' ? 'not' : 'maybe'}`;
 
-          const label = document.createElement('div');
-          label.textContent = item.name;
+        const top = document.createElement('div');
+        top.className = 'item-top';
 
-          const select = document.createElement('select');
-          select.innerHTML = `
-            <option value="maybe">Maybe</option>
-            <option value="has">Has</option>
-            <option value="not">Not it</option>
-          `;
-          select.value = item.status;
-          select.addEventListener('change', (e) => {
-            state[section][index].status = e.target.value;
-            saveState();
-            render();
-          });
+        const name = document.createElement('div');
+        name.className = 'item-name';
+        name.textContent = item.name;
 
-          const note = document.createElement('input');
-          note.type = 'text';
-          note.placeholder = 'Optional note';
-          note.value = item.note;
-          note.addEventListener('input', (e) => {
-            state[section][index].note = e.target.value;
-            saveState();
-          });
-
-          row.append(label, select, note);
-          group.appendChild(row);
+        const select = document.createElement('select');
+        select.innerHTML = `
+          <option value="maybe">Still Possible</option>
+          <option value="has">Has / Seen</option>
+          <option value="not">Ruled Out</option>
+        `;
+        select.value = item.status;
+        select.addEventListener('change', (e) => {
+          state[section][index].status = e.target.value;
+          saveState();
+          render();
         });
 
-        tracker.appendChild(group);
+        const note = document.createElement('input');
+        note.type = 'text';
+        note.placeholder = 'Who showed it? Why ruled out?';
+        note.value = item.note;
+        note.addEventListener('input', (e) => {
+          state[section][index].note = e.target.value;
+          saveState();
+        });
+
+        top.append(name, select);
+        wrapper.append(top, note);
+        list.appendChild(wrapper);
       });
 
-      const notesEl = document.getElementById('generalNotes');
-      notesEl.value = state.generalNotes;
+      card.append(head, list);
+      return card;
+    }
+
+    function render() {
+      document.getElementById('boardTitle').textContent = state.boardName || 'Case board';
+      document.title = (state.boardName || 'Clue Custom Board') + ' - Case File';
+
+      const tracker = document.getElementById('tracker');
+      tracker.innerHTML = '';
+      ['suspects', 'weapons', 'rooms'].forEach(section => tracker.appendChild(renderCategory(section)));
+
+      document.getElementById('generalNotes').value = state.generalNotes;
+      document.getElementById('solutionSuspect').value = state.solutionSuspect;
+      document.getElementById('solutionWeapon').value = state.solutionWeapon;
+      document.getElementById('solutionRoom').value = state.solutionRoom;
       updateStats();
     }
 
     function updateStats() {
       const allItems = [...state.suspects, ...state.weapons, ...state.rooms];
-      const has = allItems.filter(item => item.status === 'has').length;
-      const not = allItems.filter(item => item.status === 'not').length;
-      const maybe = allItems.filter(item => item.status === 'maybe').length;
-      document.getElementById('hasCount').textContent = has;
-      document.getElementById('notCount').textContent = not;
-      document.getElementById('maybeCount').textContent = maybe;
+      document.getElementById('hasCount').textContent = allItems.filter(x => x.status === 'has').length;
+      document.getElementById('notCount').textContent = allItems.filter(x => x.status === 'not').length;
+      document.getElementById('maybeCount').textContent = allItems.filter(x => x.status === 'maybe').length;
     }
 
-    document.getElementById('generalNotes').addEventListener('input', (e) => {
-      state.generalNotes = e.target.value;
+    function bindInput(id, key) {
+      document.getElementById(id).addEventListener('input', (e) => {
+        state[key] = e.target.value;
+        saveState();
+      });
+    }
+
+    bindInput('generalNotes', 'generalNotes');
+    bindInput('solutionSuspect', 'solutionSuspect');
+    bindInput('solutionWeapon', 'solutionWeapon');
+    bindInput('solutionRoom', 'solutionRoom');
+
+    document.getElementById('buildLinkBtn').addEventListener('click', () => {
+      const template = templateFromBuilder();
+      if (!template.suspects.length || !template.weapons.length || !template.rooms.length) {
+        alert('Add at least one entry in each category before generating a link.');
+        return;
+      }
+      const encoded = encodeTemplate(template);
+      const url = window.location.origin + window.location.pathname + '?board=' + encodeURIComponent(encoded);
+      document.getElementById('shareLink').value = url;
+      document.getElementById('shareHint').textContent = 'Share this link with your group.';
+
+      currentTemplate = template;
+      STORAGE_KEY = uniqueKeyFromTemplate(currentTemplate);
+      state = blankState(currentTemplate);
       saveState();
+      render();
     });
 
-    document.getElementById('resetBtn').addEventListener('click', () => {
-      const confirmed = window.confirm('Reset your personal board on this device?');
-      if (!confirmed) return;
-      state = blankState();
+    document.getElementById('copyLinkBtn').addEventListener('click', async () => {
+      const link = document.getElementById('shareLink').value.trim();
+      if (!link) {
+        alert('Generate a share link first.');
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(link);
+        document.getElementById('shareHint').textContent = 'Copied.';
+      } catch {
+        document.getElementById('shareHint').textContent = 'Copy failed. You can still select the link and copy it manually.';
+      }
+    });
+
+    document.getElementById('useClassicBtn').addEventListener('click', () => {
+      currentTemplate = CLASSIC_TEMPLATE;
+      STORAGE_KEY = uniqueKeyFromTemplate(currentTemplate);
+      fillBuilderFromTemplate(currentTemplate);
+      const url = window.location.origin + window.location.pathname + '?board=' + encodeURIComponent(encodeTemplate(currentTemplate));
+      document.getElementById('shareLink').value = url;
+      state = loadState();
+      saveState();
+      render();
+    });
+
+    document.getElementById('resetNotesBtn').addEventListener('click', () => {
+      if (!window.confirm('Reset only your notes for this board on this device?')) return;
+      state = blankState(currentTemplate);
       saveState();
       render();
     });
 
     document.getElementById('exportBtn').addEventListener('click', () => {
-      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const exportData = { template: currentTemplate, state };
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'clue-tracker-notes.json';
+      a.download = 'clue-case-file.json';
       a.click();
       URL.revokeObjectURL(url);
     });
@@ -416,24 +708,24 @@
       const file = e.target.files?.[0];
       if (!file) return;
       try {
-        const text = await file.text();
-        const parsed = JSON.parse(text);
-        state = parsed;
+        const imported = JSON.parse(await file.text());
+        if (imported.template) {
+          currentTemplate = imported.template;
+          STORAGE_KEY = uniqueKeyFromTemplate(currentTemplate);
+          fillBuilderFromTemplate(currentTemplate);
+          document.getElementById('shareLink').value = window.location.origin + window.location.pathname + '?board=' + encodeURIComponent(encodeTemplate(currentTemplate));
+        }
+        state = imported.state || blankState(currentTemplate);
         saveState();
         render();
       } catch {
-        alert('That file could not be imported.');
+        alert('That case file could not be imported.');
       }
       e.target.value = '';
     });
 
-    window.addEventListener('storage', (event) => {
-      if (event.key === STORAGE_KEY) {
-        state = loadState();
-        render();
-      }
-    });
-
+    fillBuilderFromTemplate(currentTemplate);
+    document.getElementById('shareLink').value = window.location.href;
     render();
   </script>
 </body>
