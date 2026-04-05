@@ -462,26 +462,30 @@
   }
 
   function blankNotesForPlayer(){
-    if(!game || !player) return null;
+  if(!game || !player) return null;
 
-    const colLabels = ['ME', ...game.players.slice(1).map((_, i) => 'NOTE ' + (i + 1))];
+  const otherPlayers = game.players
+    .filter(p => p.code !== player.code)
+    .map(p => p.name);
 
-    const buildRows = (items, categoryKey) => items.map(name => {
-      const marks = Array(game.players.length).fill('');
-      if(player.hand.some(card => card.category === categoryKey && card.name === name)){
-        marks[0] = '✓';
-      }
-      return { name, marks };
-    });
+  const colLabels = ['ME', ...otherPlayers];
 
-    return {
-      labels: colLabels,
-      sus: buildRows(game.sus, 'sus'),
-      weap: buildRows(game.weap, 'weap'),
-      rooms: buildRows(game.rooms, 'rooms'),
-      generalNotes: ''
-    };
-  }
+  const buildRows = (items, categoryKey) => items.map(name => {
+    const marks = Array(colLabels.length).fill('');
+    if(player.hand.some(card => card.category === categoryKey && card.name === name)){
+      marks[0] = '✓';
+    }
+    return { name, marks };
+  });
+
+  return {
+    labels: colLabels,
+    sus: buildRows(game.sus, 'sus'),
+    weap: buildRows(game.weap, 'weap'),
+    rooms: buildRows(game.rooms, 'rooms'),
+    generalNotes: ''
+  };
+}
 
   function loadNotes(){
     if(!game || !player) return;
