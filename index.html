@@ -518,20 +518,25 @@
     }
 
     function renderPlayerNameInputs() {
-      const grid = document.getElementById('playerNamesGrid');
-      grid.innerHTML = '';
-      for (let i = 0; i < state.playerCount; i++) {
-        const input = document.createElement('input');
-        input.value = state.playerNames?.[i] || ('P' + (i + 1));
-        input.placeholder = 'P' + (i + 1);
-        input.addEventListener('input', (e) => {
-          state.playerNames[i] = e.target.value;
-          saveState();
-          renderSheet();
-        });
-        grid.appendChild(input);
-      }
-    }
+  const grid = document.getElementById('playerNamesGrid');
+  grid.innerHTML = '';
+  for (let i = 0; i < state.playerCount; i++) {
+    const input = document.createElement('input');
+    input.value = state.playerNames?.[i] || ('P' + (i + 1));
+    input.placeholder = 'P' + (i + 1);
+
+    input.addEventListener('input', (e) => {
+      state.playerNames[i] = e.target.value;
+      saveState();
+    });
+
+    input.addEventListener('change', () => {
+      renderSheet();
+    });
+
+    grid.appendChild(input);
+  }
+}
 
     function renderSheet() {
       document.getElementById('boardTitle').textContent = state.boardName || 'Clue Sheet';
