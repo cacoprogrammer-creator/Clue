@@ -3,391 +3,322 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Clue Custom Board Builder</title>
+  <title>Detective Notes Builder</title>
   <style>
     :root {
-      --bg: #120c08;
-      --panel: #201610;
-      --panel-2: #2a1d16;
-      --panel-3: #3a291f;
-      --gold: #d8b36a;
-      --gold-soft: #f0d8a0;
-      --paper: #efe1bf;
-      --ink: #20150d;
-      --text: #f8f1e4;
-      --muted: #ccb893;
-      --accent: #8b1e1e;
-      --good: #2d8a56;
-      --bad: #9c2f2f;
-      --maybe: #7b6a58;
-      --border: rgba(240, 216, 160, 0.18);
-      --shadow: 0 20px 60px rgba(0,0,0,0.35);
+      --bg: #efe6d1;
+      --paper: #fffaf0;
+      --paper-2: #f7eed9;
+      --ink: #2c241b;
+      --muted: #6b604f;
+      --line: #b9aa8d;
+      --suspects: #d6b36f;
+      --weapons: #c97c7c;
+      --rooms: #7fa17c;
+      --shadow: 0 10px 28px rgba(55, 41, 19, 0.12);
     }
 
     * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      font-family: Georgia, "Times New Roman", serif;
-      color: var(--text);
-      background:
-        radial-gradient(circle at top, rgba(139,30,30,0.18), transparent 28%),
-        linear-gradient(180deg, #0f0a07, #19110d 45%, #0f0a07);
-      min-height: 100vh;
+      background: linear-gradient(180deg, #ece0c6, #f5eddc 45%, #ece0c6);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
     }
 
     .wrap {
-      width: min(1360px, calc(100% - 20px));
+      width: min(1440px, calc(100% - 16px));
       margin: 0 auto;
-      padding: 18px 0 40px;
+      padding: 12px 0 24px;
     }
 
-    .hero, .panel, .envelope {
+    .hero, .panel {
+      background: var(--paper);
+      border: 2px solid var(--line);
+      border-radius: 14px;
       box-shadow: var(--shadow);
     }
 
     .hero {
-      background: linear-gradient(180deg, rgba(42,29,22,0.96), rgba(26,18,14,0.98));
-      border: 1px solid var(--border);
-      border-radius: 28px;
-      padding: 22px;
-      position: relative;
-      overflow: hidden;
-      margin-bottom: 16px;
-    }
-
-    .hero::before,
-    .hero::after {
-      content: "";
-      position: absolute;
-      border: 1px solid rgba(216,179,106,0.22);
-      pointer-events: none;
-      border-radius: 22px;
-    }
-
-    .hero::before { inset: 10px; }
-    .hero::after { inset: 18px; }
-
-    .hero-inner {
-      position: relative;
-      z-index: 1;
-      display: grid;
-      grid-template-columns: 1.15fr .85fr;
-      gap: 18px;
-      align-items: center;
+      padding: 14px;
+      margin-bottom: 12px;
     }
 
     h1 {
       margin: 0;
-      font-size: clamp(2rem, 4vw, 3.4rem);
+      font-size: clamp(1.6rem, 3vw, 2.6rem);
       letter-spacing: 0.06em;
       text-transform: uppercase;
-      color: var(--gold-soft);
     }
 
     .subtitle {
-      margin: 10px 0 0;
+      margin: 8px 0 0;
       color: var(--muted);
-      line-height: 1.6;
-      max-width: 760px;
-      font-size: 1rem;
-    }
-
-    .case-box {
-      background: rgba(0,0,0,0.18);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 16px;
-    }
-
-    .case-box h2,
-    .panel h2,
-    .envelope h3 {
-      margin: 0 0 12px;
-      font-size: 1rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--gold-soft);
+      line-height: 1.45;
+      max-width: 900px;
     }
 
     .toolbar {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 16px;
+      gap: 8px;
+      margin-top: 12px;
     }
 
     button {
       appearance: none;
-      border: 1px solid var(--border);
-      background: linear-gradient(180deg, #3a291f, #251912);
-      color: var(--text);
-      padding: 11px 14px;
-      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #fffdf8;
+      color: var(--ink);
+      padding: 9px 12px;
+      border-radius: 10px;
       cursor: pointer;
       font: inherit;
-      font-size: 0.96rem;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.18);
-    }
-
-    button.primary {
-      background: linear-gradient(180deg, #b48b43, #8a652e);
-      color: #20150d;
       font-weight: 700;
     }
 
-    button.small {
-      padding: 8px 11px;
-      font-size: 0.9rem;
+    button.primary {
+      background: #2f2419;
+      color: #fffaf2;
+      border-color: #2f2419;
     }
 
-    .status-line, .legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: center;
+    .status {
+      margin-top: 10px;
       color: var(--muted);
-      font-size: 0.94rem;
-      margin-top: 14px;
-    }
-
-    .legend span {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 10px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid var(--border);
-      border-radius: 999px;
       font-size: 0.9rem;
     }
-
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-      display: inline-block;
-    }
-
-    .dot.has { background: var(--good); }
-    .dot.not { background: var(--bad); }
-    .dot.maybe { background: #9a8466; }
 
     .layout {
       display: grid;
-      grid-template-columns: .95fr 1.05fr;
-      gap: 16px;
+      grid-template-columns: 360px 1fr;
+      gap: 12px;
     }
 
     .panel {
-      background: linear-gradient(180deg, rgba(32,22,16,0.98), rgba(22,15,11,0.98));
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 18px;
+      padding: 14px;
+    }
+
+    .panel h2 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .builder-grid {
       display: grid;
-      gap: 14px;
+      gap: 10px;
     }
 
     label {
       display: block;
-      font-size: 0.92rem;
+      font-size: 0.88rem;
       color: var(--muted);
-      margin-bottom: 6px;
+      margin-bottom: 5px;
+      font-weight: 700;
     }
 
     input, textarea, select {
       width: 100%;
-      border-radius: 12px;
-      border: 1px solid rgba(240,216,160,0.16);
-      background: #130d0a;
-      color: var(--text);
-      padding: 10px 12px;
+      border: 1px solid var(--line);
+      background: #fffdf9;
+      color: var(--ink);
+      border-radius: 8px;
+      padding: 9px 10px;
       font: inherit;
-      font-size: 0.95rem;
     }
 
     textarea {
-      min-height: 120px;
+      min-height: 88px;
       resize: vertical;
-      line-height: 1.5;
+      line-height: 1.4;
     }
 
     .share-box {
-      background: rgba(0,0,0,0.14);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 12px;
+      border: 1px dashed var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      background: var(--paper-2);
     }
 
     .share-row {
       display: grid;
       grid-template-columns: 1fr auto;
-      gap: 10px;
-      align-items: center;
+      gap: 8px;
     }
 
     .tiny {
       color: var(--muted);
-      font-size: 0.9rem;
-      line-height: 1.5;
+      font-size: 0.86rem;
+      line-height: 1.4;
     }
 
-    .casefile-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
-      margin-top: 14px;
-    }
-
-    .category-card {
-      background: linear-gradient(180deg, rgba(58,41,31,0.55), rgba(37,25,18,0.72));
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      overflow: hidden;
-    }
-
-    .category-head {
-      padding: 14px 14px 10px;
-      border-bottom: 1px solid rgba(240,216,160,0.12);
-      background: rgba(0,0,0,0.08);
-    }
-
-    .category-head h3 {
-      margin: 0;
-      font-size: 1rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--gold-soft);
-    }
-
-    .item-list {
-      padding: 10px;
-      display: grid;
-      gap: 10px;
-    }
-
-    .item {
-      background: rgba(0,0,0,0.14);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 10px;
-    }
-
-    .item-top {
+    .sheet-top {
       display: flex;
       justify-content: space-between;
-      gap: 10px;
-      align-items: center;
+      gap: 12px;
+      align-items: end;
       margin-bottom: 8px;
+      flex-wrap: wrap;
     }
 
-    .item-name {
+    .sheet-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .sheet-subtitle {
+      font-size: 0.86rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .scroll-x { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fffdf8;
+      border: 2px solid var(--line);
+    }
+
+    th, td {
+      border: 1px solid #ccbda1;
+      padding: 0;
+      text-align: center;
+      font-size: 0.88rem;
+    }
+
+    thead th {
+      background: #efe4ca;
+      padding: 7px 4px;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      min-width: 38px;
+    }
+
+    .card-col {
+      min-width: 190px;
+      text-align: left;
+      padding: 8px 10px;
+      font-weight: 700;
+      background: #fff9eb;
+      position: sticky;
+      left: 0;
+      z-index: 2;
+    }
+
+    thead .card-col { z-index: 3; }
+
+    .section-cell {
+      text-align: left;
+      padding: 8px 10px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #21170f;
+    }
+
+    .sec-suspects td { background: var(--suspects); }
+    .sec-weapons td { background: var(--weapons); }
+    .sec-rooms td { background: var(--rooms); }
+
+    .mark-btn {
+      width: 100%;
+      min-width: 38px;
+      height: 34px;
+      border: 0;
+      background: #fffdf8;
+      font-weight: 800;
+      font-size: 0.95rem;
+      cursor: pointer;
+      color: var(--ink);
+    }
+
+    .state-check { background: #e4f0e4; color: #244d29; }
+    .state-x { background: #f6e0e0; color: #7a2323; }
+    .state-dot { background: #efe8d8; color: #6d5d48; }
+
+    .bottom-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .accusation-box, .notes-box {
+      border: 2px solid var(--line);
+      border-radius: 12px;
+      background: #fffdf8;
+      padding: 12px;
+    }
+
+    .accusation-box h3, .notes-box h3, .player-names h3 {
+      margin: 0 0 10px;
       font-size: 0.98rem;
-      line-height: 1.25;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
-    .item.status-has { border-color: rgba(45,138,86,0.85); }
-    .item.status-not { border-color: rgba(156,47,47,0.88); }
-    .item.status-maybe { border-color: rgba(240,216,160,0.13); }
-
-    .right-stack {
-      display: grid;
-      gap: 16px;
-    }
-
-    .envelope {
-      background: linear-gradient(180deg, #f1e4c6, #ddc79d);
-      color: var(--ink);
-      border-radius: 22px;
-      padding: 18px;
-      border: 1px solid rgba(0,0,0,0.12);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 0 18px 40px rgba(0,0,0,0.26);
-    }
-
-    .envelope input {
-      background: rgba(255,255,255,0.55);
-      color: var(--ink);
-      border: 1px solid rgba(0,0,0,0.12);
-    }
-
-    .solution-grid {
-      display: grid;
-      gap: 10px;
-    }
-
-    .stats {
+    .player-name-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 10px;
     }
 
     .stat {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 9px;
+      background: #fffdf8;
     }
 
     .stat strong {
       display: block;
-      font-size: 1.5rem;
-      color: var(--gold-soft);
-      margin-bottom: 4px;
+      font-size: 1.2rem;
+      margin-bottom: 3px;
     }
 
-    .hidden {
-      display: none;
+    @media (max-width: 1080px) {
+      .layout { grid-template-columns: 1fr; }
+      .bottom-grid { grid-template-columns: 1fr; }
     }
 
-    @media (max-width: 1200px) {
-      .layout, .hero-inner { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 900px) {
-      .casefile-grid { grid-template-columns: 1fr; }
-      .stats { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 700px) {
-      .wrap { width: min(100% - 12px, 1360px); }
-      .hero, .panel { border-radius: 20px; }
-      .share-row { grid-template-columns: 1fr; }
-      h1 { font-size: 2rem; }
+    @media (max-width: 760px) {
+      .player-name-grid { grid-template-columns: 1fr 1fr; }
+      .summary { grid-template-columns: 1fr 1fr; }
+      .card-col { min-width: 150px; }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
     <section class="hero">
-      <div class="hero-inner">
-        <div>
-          <h1>Clue Custom Board Builder</h1>
-          <p class="subtitle">Create a custom game once, generate a share link, and everyone who opens that link gets the same board template with their own private notes.</p>
-          <div class="toolbar">
-            <button class="primary" id="buildLinkBtn">Generate Share Link</button>
-            <button id="useClassicBtn">Load Classic Clue</button>
-            <button id="resetNotesBtn">Reset My Notes</button>
-            <button id="exportBtn">Export My Notes</button>
-            <button id="importBtn">Import My Notes</button>
-            <input id="importFile" type="file" accept="application/json" hidden />
-          </div>
-          <div class="status-line">
-            <span id="saveStatus">Saved automatically on this device.</span>
-          </div>
-          <div class="legend">
-            <span><i class="dot has"></i> Has / Seen</span>
-            <span><i class="dot not"></i> Ruled Out</span>
-            <span><i class="dot maybe"></i> Still Possible</span>
-          </div>
-        </div>
-        <div class="case-box">
-          <h2>How the custom version works</h2>
-          <div class="tiny">The board setup lives in the URL. That means one person can build a custom board, click generate, and send the link to everyone else. Each person gets the same board, but their deductions stay separate on their own device.</div>
-        </div>
+      <h1>Detective Notes Builder</h1>
+      <p class="subtitle">This version is built to feel much closer to the classic Clue notes sheet: a paper-style scorecard with narrow note columns, section bands, and custom card names.</p>
+      <div class="toolbar">
+        <button class="primary" id="buildLinkBtn">Generate Share Link</button>
+        <button id="useClassicBtn">Load Classic Clue</button>
+        <button id="resetNotesBtn">Reset My Notes</button>
+        <button id="exportBtn">Export My Notes</button>
+        <button id="importBtn">Import My Notes</button>
+        <input id="importFile" type="file" accept="application/json" hidden />
       </div>
+      <div class="status" id="saveStatus">Saved automatically on this device.</div>
     </section>
 
     <div class="layout">
@@ -396,10 +327,20 @@
         <div class="builder-grid">
           <div>
             <label for="boardName">Board name</label>
-            <input id="boardName" placeholder="Mansion Mystery Night" />
+            <input id="boardName" placeholder="Mystery Night" />
           </div>
           <div>
-            <label for="suspectsInput">Characters / suspects (one per line)</label>
+            <label for="playerCount">Note columns</label>
+            <select id="playerCount">
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6" selected>6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+            </select>
+          </div>
+          <div>
+            <label for="suspectsInput">Suspects / characters (one per line)</label>
             <textarea id="suspectsInput"></textarea>
           </div>
           <div>
@@ -414,68 +355,71 @@
             <label for="shareLink">Share link</label>
             <div class="share-row">
               <input id="shareLink" readonly placeholder="Click Generate Share Link" />
-              <button class="small" id="copyLinkBtn">Copy Link</button>
+              <button id="copyLinkBtn">Copy</button>
             </div>
-            <div class="tiny" id="shareHint">Anyone who opens this link gets this board template.</div>
+            <div class="tiny" id="shareHint">Share this link with your group.</div>
           </div>
         </div>
       </section>
 
-      <section class="right-stack">
-        <section class="envelope">
-          <h3>Final accusation</h3>
-          <div class="solution-grid">
-            <input id="solutionSuspect" placeholder="Suspect" />
-            <input id="solutionWeapon" placeholder="Weapon" />
-            <input id="solutionRoom" placeholder="Room" />
+      <section class="panel">
+        <div class="sheet-top">
+          <div>
+            <div class="sheet-title" id="boardTitle">Classic Clue</div>
+            <div class="sheet-subtitle">Detective notes</div>
           </div>
-        </section>
+        </div>
 
-        <section class="panel">
-          <h2>Turn log</h2>
-          <textarea id="generalNotes" placeholder="Example: Turn 3 — I guessed Plum, Rope, Library. Jordan showed one card. I know it was not Rope because I have Rope."></textarea>
-        </section>
+        <div class="player-names">
+          <h3>Column labels</h3>
+          <div class="player-name-grid" id="playerNamesGrid"></div>
+        </div>
 
-        <section class="panel">
-          <h2>Case summary</h2>
-          <div class="stats">
-            <div class="stat">
-              <strong id="hasCount">0</strong>
-              <span class="tiny">Has / Seen</span>
-            </div>
-            <div class="stat">
-              <strong id="notCount">0</strong>
-              <span class="tiny">Ruled Out</span>
-            </div>
-            <div class="stat">
-              <strong id="maybeCount">0</strong>
-              <span class="tiny">Still Possible</span>
+        <div class="scroll-x">
+          <table>
+            <thead id="sheetHead"></thead>
+            <tbody id="sheetBody"></tbody>
+          </table>
+        </div>
+
+        <div class="summary">
+          <div class="stat"><strong id="checkCount">0</strong><span class="tiny">Checks</span></div>
+          <div class="stat"><strong id="xCount">0</strong><span class="tiny">X marks</span></div>
+          <div class="stat"><strong id="dotCount">0</strong><span class="tiny">Dots</span></div>
+          <div class="stat"><strong id="rowCount">0</strong><span class="tiny">Cards</span></div>
+        </div>
+
+        <div class="bottom-grid">
+          <div class="accusation-box">
+            <h3>Final accusation</h3>
+            <div class="builder-grid">
+              <input id="solutionSuspect" placeholder="Suspect" />
+              <input id="solutionWeapon" placeholder="Weapon" />
+              <input id="solutionRoom" placeholder="Room" />
             </div>
           </div>
-        </section>
+          <div class="notes-box">
+            <h3>Detective notes</h3>
+            <textarea id="generalNotes" placeholder="Turn-by-turn notes, reveals, guesses, and logic..."></textarea>
+          </div>
+        </div>
       </section>
     </div>
-
-    <section class="panel" style="margin-top:16px;">
-      <h2 id="boardTitle">Case board</h2>
-      <div class="casefile-grid" id="tracker"></div>
-    </section>
   </div>
 
   <script>
     const CLASSIC_TEMPLATE = {
       boardName: 'Classic Clue',
+      playerCount: 6,
       suspects: ['Miss Scarlet', 'Colonel Mustard', 'Mrs. White', 'Mr. Green', 'Mrs. Peacock', 'Professor Plum'],
       weapons: ['Candlestick', 'Knife', 'Lead Pipe', 'Revolver', 'Rope', 'Wrench'],
       rooms: ['Kitchen', 'Ballroom', 'Conservatory', 'Dining Room', 'Billiard Room', 'Library', 'Lounge', 'Hall', 'Study']
     };
 
+    const MARKS = ['', '✓', '✕', '•'];
+
     function parseLines(text) {
       return text.split('\n').map(x => x.trim()).filter(Boolean);
-    }
-
-    function uniqueKeyFromTemplate(template) {
-      return 'clue-custom-' + btoa(unescape(encodeURIComponent(JSON.stringify(template)))).slice(0, 80);
     }
 
     function encodeTemplate(template) {
@@ -498,16 +442,24 @@
       return parsed && parsed.suspects && parsed.weapons && parsed.rooms ? parsed : CLASSIC_TEMPLATE;
     }
 
+    function storageKey(template) {
+      return 'clue-sheet-' + encodeTemplate(template).slice(0, 80);
+    }
+
     let currentTemplate = getTemplateFromUrl();
-    let STORAGE_KEY = uniqueKeyFromTemplate(currentTemplate);
+    let STORAGE_KEY = storageKey(currentTemplate);
 
     function blankState(template) {
-      const makeItems = items => items.map(name => ({ name, status: 'maybe', note: '' }));
+      const cols = Number(template.playerCount || 6);
+      const defaultNames = Array.from({ length: cols }, (_, i) => 'P' + (i + 1));
+      const makeItem = (name) => ({ name, marks: Array(cols).fill('') });
       return {
-        boardName: template.boardName || 'Custom Board',
-        suspects: makeItems(template.suspects || []),
-        weapons: makeItems(template.weapons || []),
-        rooms: makeItems(template.rooms || []),
+        boardName: template.boardName || 'Custom Clue',
+        playerCount: cols,
+        playerNames: defaultNames,
+        suspects: (template.suspects || []).map(makeItem),
+        weapons: (template.weapons || []).map(makeItem),
+        rooms: (template.rooms || []).map(makeItem),
         generalNotes: '',
         solutionSuspect: '',
         solutionWeapon: '',
@@ -529,102 +481,143 @@
     function saveState() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       document.getElementById('saveStatus').textContent = 'Saved automatically on this device.';
-      updateStats();
+      updateSummary();
     }
 
-    function fillBuilderFromTemplate(template) {
+    function fillBuilder(template) {
       document.getElementById('boardName').value = template.boardName || '';
+      document.getElementById('playerCount').value = String(template.playerCount || 6);
       document.getElementById('suspectsInput').value = (template.suspects || []).join('\n');
       document.getElementById('weaponsInput').value = (template.weapons || []).join('\n');
       document.getElementById('roomsInput').value = (template.rooms || []).join('\n');
     }
 
-    function templateFromBuilder() {
+    function builderTemplate() {
       return {
-        boardName: document.getElementById('boardName').value.trim() || 'Custom Board',
+        boardName: document.getElementById('boardName').value.trim() || 'Custom Clue',
+        playerCount: Number(document.getElementById('playerCount').value || 6),
         suspects: parseLines(document.getElementById('suspectsInput').value),
         weapons: parseLines(document.getElementById('weaponsInput').value),
         rooms: parseLines(document.getElementById('roomsInput').value)
       };
     }
 
-    function sectionTitle(key) {
-      return key.charAt(0).toUpperCase() + key.slice(1);
+    function cycleMark(section, rowIndex, colIndex) {
+      const current = state[section][rowIndex].marks[colIndex] || '';
+      const next = MARKS[(MARKS.indexOf(current) + 1) % MARKS.length];
+      state[section][rowIndex].marks[colIndex] = next;
+      saveState();
+      renderSheet();
     }
 
-    function renderCategory(section) {
-      const card = document.createElement('div');
-      card.className = 'category-card';
+    function markClass(value) {
+      if (value === '✓') return 'state-check';
+      if (value === '✕') return 'state-x';
+      if (value === '•') return 'state-dot';
+      return '';
+    }
 
-      const head = document.createElement('div');
-      head.className = 'category-head';
-      head.innerHTML = `<h3>${sectionTitle(section)}</h3>`;
-
-      const list = document.createElement('div');
-      list.className = 'item-list';
-
-      state[section].forEach((item, index) => {
-        const wrapper = document.createElement('div');
-        wrapper.className = `item status-${item.status === 'has' ? 'has' : item.status === 'not' ? 'not' : 'maybe'}`;
-
-        const top = document.createElement('div');
-        top.className = 'item-top';
-
-        const name = document.createElement('div');
-        name.className = 'item-name';
-        name.textContent = item.name;
-
-        const select = document.createElement('select');
-        select.innerHTML = `
-          <option value="maybe">Still Possible</option>
-          <option value="has">Has / Seen</option>
-          <option value="not">Ruled Out</option>
-        `;
-        select.value = item.status;
-        select.addEventListener('change', (e) => {
-          state[section][index].status = e.target.value;
+    function renderPlayerNameInputs() {
+      const grid = document.getElementById('playerNamesGrid');
+      grid.innerHTML = '';
+      for (let i = 0; i < state.playerCount; i++) {
+        const input = document.createElement('input');
+        input.value = state.playerNames?.[i] || ('P' + (i + 1));
+        input.placeholder = 'P' + (i + 1);
+        input.addEventListener('input', (e) => {
+          state.playerNames[i] = e.target.value;
           saveState();
-          render();
+          renderSheet();
         });
+        grid.appendChild(input);
+      }
+    }
 
-        const note = document.createElement('input');
-        note.type = 'text';
-        note.placeholder = 'Who showed it? Why ruled out?';
-        note.value = item.note;
-        note.addEventListener('input', (e) => {
-          state[section][index].note = e.target.value;
-          saveState();
+    function renderSheet() {
+      document.getElementById('boardTitle').textContent = state.boardName || 'Clue Sheet';
+      document.title = (state.boardName || 'Clue Sheet') + ' - Detective Notes';
+
+      renderPlayerNameInputs();
+
+      const head = document.getElementById('sheetHead');
+      const body = document.getElementById('sheetBody');
+      head.innerHTML = '';
+      body.innerHTML = '';
+
+      const headerRow = document.createElement('tr');
+      const first = document.createElement('th');
+      first.className = 'card-col';
+      first.textContent = 'Cards';
+      headerRow.appendChild(first);
+
+      for (let i = 0; i < state.playerCount; i++) {
+        const th = document.createElement('th');
+        th.textContent = state.playerNames?.[i] || ('P' + (i + 1));
+        headerRow.appendChild(th);
+      }
+      head.appendChild(headerRow);
+
+      const sections = [
+        ['suspects', 'Suspects', 'sec-suspects'],
+        ['weapons', 'Weapons', 'sec-weapons'],
+        ['rooms', 'Rooms', 'sec-rooms']
+      ];
+
+      sections.forEach(([key, label, className]) => {
+        const sectionRow = document.createElement('tr');
+        sectionRow.className = className;
+        const td = document.createElement('td');
+        td.colSpan = state.playerCount + 1;
+        td.className = 'section-cell';
+        td.textContent = label;
+        sectionRow.appendChild(td);
+        body.appendChild(sectionRow);
+
+        state[key].forEach((item, rowIndex) => {
+          const tr = document.createElement('tr');
+
+          const nameTd = document.createElement('td');
+          nameTd.className = 'card-col';
+          nameTd.textContent = item.name;
+          tr.appendChild(nameTd);
+
+          item.marks.forEach((mark, colIndex) => {
+            const td = document.createElement('td');
+            const btn = document.createElement('button');
+            btn.className = 'mark-btn ' + markClass(mark);
+            btn.textContent = mark;
+            btn.addEventListener('click', () => cycleMark(key, rowIndex, colIndex));
+            td.appendChild(btn);
+            tr.appendChild(td);
+          });
+
+          body.appendChild(tr);
         });
-
-        top.append(name, select);
-        wrapper.append(top, note);
-        list.appendChild(wrapper);
       });
-
-      card.append(head, list);
-      return card;
-    }
-
-    function render() {
-      document.getElementById('boardTitle').textContent = state.boardName || 'Case board';
-      document.title = (state.boardName || 'Clue Custom Board') + ' - Case File';
-
-      const tracker = document.getElementById('tracker');
-      tracker.innerHTML = '';
-      ['suspects', 'weapons', 'rooms'].forEach(section => tracker.appendChild(renderCategory(section)));
 
       document.getElementById('generalNotes').value = state.generalNotes;
       document.getElementById('solutionSuspect').value = state.solutionSuspect;
       document.getElementById('solutionWeapon').value = state.solutionWeapon;
       document.getElementById('solutionRoom').value = state.solutionRoom;
-      updateStats();
+      updateSummary();
     }
 
-    function updateStats() {
-      const allItems = [...state.suspects, ...state.weapons, ...state.rooms];
-      document.getElementById('hasCount').textContent = allItems.filter(x => x.status === 'has').length;
-      document.getElementById('notCount').textContent = allItems.filter(x => x.status === 'not').length;
-      document.getElementById('maybeCount').textContent = allItems.filter(x => x.status === 'maybe').length;
+    function updateSummary() {
+      let checks = 0, xs = 0, dots = 0, rows = 0;
+      ['suspects','weapons','rooms'].forEach(section => {
+        rows += state[section].length;
+        state[section].forEach(item => {
+          item.marks.forEach(mark => {
+            if (mark === '✓') checks++;
+            else if (mark === '✕') xs++;
+            else if (mark === '•') dots++;
+          });
+        });
+      });
+      document.getElementById('checkCount').textContent = checks;
+      document.getElementById('xCount').textContent = xs;
+      document.getElementById('dotCount').textContent = dots;
+      document.getElementById('rowCount').textContent = rows;
     }
 
     function bindInput(id, key) {
@@ -640,9 +633,9 @@
     bindInput('solutionRoom', 'solutionRoom');
 
     document.getElementById('buildLinkBtn').addEventListener('click', () => {
-      const template = templateFromBuilder();
+      const template = builderTemplate();
       if (!template.suspects.length || !template.weapons.length || !template.rooms.length) {
-        alert('Add at least one entry in each category before generating a link.');
+        alert('Add at least one entry in each category first.');
         return;
       }
       const encoded = encodeTemplate(template);
@@ -651,10 +644,10 @@
       document.getElementById('shareHint').textContent = 'Share this link with your group.';
 
       currentTemplate = template;
-      STORAGE_KEY = uniqueKeyFromTemplate(currentTemplate);
+      STORAGE_KEY = storageKey(currentTemplate);
       state = blankState(currentTemplate);
       saveState();
-      render();
+      renderSheet();
     });
 
     document.getElementById('copyLinkBtn').addEventListener('click', async () => {
@@ -667,26 +660,25 @@
         await navigator.clipboard.writeText(link);
         document.getElementById('shareHint').textContent = 'Copied.';
       } catch {
-        document.getElementById('shareHint').textContent = 'Copy failed. You can still select the link and copy it manually.';
+        document.getElementById('shareHint').textContent = 'Copy failed. Copy it manually.';
       }
     });
 
     document.getElementById('useClassicBtn').addEventListener('click', () => {
       currentTemplate = CLASSIC_TEMPLATE;
-      STORAGE_KEY = uniqueKeyFromTemplate(currentTemplate);
-      fillBuilderFromTemplate(currentTemplate);
-      const url = window.location.origin + window.location.pathname + '?board=' + encodeURIComponent(encodeTemplate(currentTemplate));
-      document.getElementById('shareLink').value = url;
+      STORAGE_KEY = storageKey(currentTemplate);
+      fillBuilder(currentTemplate);
+      document.getElementById('shareLink').value = window.location.origin + window.location.pathname + '?board=' + encodeURIComponent(encodeTemplate(currentTemplate));
       state = loadState();
       saveState();
-      render();
+      renderSheet();
     });
 
     document.getElementById('resetNotesBtn').addEventListener('click', () => {
-      if (!window.confirm('Reset only your notes for this board on this device?')) return;
+      if (!window.confirm('Reset your notes for this board on this device?')) return;
       state = blankState(currentTemplate);
       saveState();
-      render();
+      renderSheet();
     });
 
     document.getElementById('exportBtn').addEventListener('click', () => {
@@ -695,7 +687,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'clue-case-file.json';
+      a.download = 'detective-notes.json';
       a.click();
       URL.revokeObjectURL(url);
     });
@@ -711,22 +703,22 @@
         const imported = JSON.parse(await file.text());
         if (imported.template) {
           currentTemplate = imported.template;
-          STORAGE_KEY = uniqueKeyFromTemplate(currentTemplate);
-          fillBuilderFromTemplate(currentTemplate);
+          STORAGE_KEY = storageKey(currentTemplate);
+          fillBuilder(currentTemplate);
           document.getElementById('shareLink').value = window.location.origin + window.location.pathname + '?board=' + encodeURIComponent(encodeTemplate(currentTemplate));
         }
         state = imported.state || blankState(currentTemplate);
         saveState();
-        render();
+        renderSheet();
       } catch {
-        alert('That case file could not be imported.');
+        alert('That file could not be imported.');
       }
       e.target.value = '';
     });
 
-    fillBuilderFromTemplate(currentTemplate);
+    fillBuilder(currentTemplate);
     document.getElementById('shareLink').value = window.location.href;
-    render();
+    renderSheet();
   </script>
 </body>
 </html>
