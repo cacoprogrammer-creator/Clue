@@ -4,13 +4,34 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Clue Game</title>
 <style>
-body{font-family:Arial;background:#f4ecd8;margin:0;padding:10px}
-.panel{background:white;padding:10px;border:2px solid #b9aa8d;margin-bottom:10px;border-radius:10px}
-button{padding:6px 10px;margin:4px;border-radius:6px}
+body{font-family:Arial,Helvetica,sans-serif;background:#efe6d1;margin:0;padding:10px;color:#2c241b}
+.panel{background:#fffaf0;padding:12px;border:2px solid #b9aa8d;margin-bottom:10px;border-radius:12px;box-shadow:0 8px 22px rgba(55,41,19,.08)}
+button{padding:8px 10px;margin:4px;border-radius:8px;border:1px solid #a89676;background:#fffdf8;cursor:pointer;font-weight:700}
+button:hover{background:#f7efdf}
 .hidden{display:none}
-table{width:100%;border-collapse:collapse}
-td,th{border:1px solid #aaa;text-align:center}
-.card{font-weight:bold;text-align:left;padding:5px}
+textarea,input,select{width:100%;box-sizing:border-box;border:1px solid #b9aa8d;border-radius:8px;padding:8px;background:#fffdf8;color:#2c241b}
+textarea{min-height:86px;resize:vertical}
+.grid{display:grid;grid-template-columns:360px 1fr;gap:12px}
+.code{font-weight:bold;letter-spacing:.08em}
+.sheet-wrap{overflow-x:auto;margin-top:10px}
+.sheet-title{font-size:1.2rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.sheet-sub{font-size:.88rem;color:#6b604f;margin-bottom:10px}
+table{width:100%;border-collapse:collapse;background:#fffdf8;border:2px solid #b9aa8d}
+td,th{border:1px solid #ccbda1;text-align:center;padding:0}
+thead th{background:#efe4ca;padding:7px 4px;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;min-width:40px}
+.card{font-weight:700;text-align:left;padding:8px 10px;min-width:180px;background:#fff9eb;position:sticky;left:0;z-index:2}
+thead .card{z-index:3}
+.section td{text-align:left;padding:8px 10px;font-size:.8rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#21170f}
+.sec-sus td{background:#d6b36f}
+.sec-weap td{background:#c97c7c}
+.sec-room td{background:#7fa17c}
+.mark{width:100%;min-width:40px;height:34px;border:0;background:#fffdf8;font-weight:800;font-size:.95rem;cursor:pointer;color:#2c241b}
+.state-check{background:#e4f0e4;color:#244d29}
+.state-x{background:#f6e0e0;color:#7a2323}
+.state-dot{background:#efe8d8;color:#6d5d48}
+.player-box{margin-top:10px;padding:10px;border:1px solid #b9aa8d;border-radius:10px;background:#f7eed9}
+.small{font-size:.88rem;color:#6b604f}
+@media (max-width:900px){.grid{grid-template-columns:1fr}.card{min-width:150px}}
 </style>
 </head>
 <body>
@@ -43,7 +64,7 @@ td,th{border:1px solid #aaa;text-align:center}
 
 <div class="panel">
 <h3>Join</h3>
-<input id="code">
+<input id="code" placeholder="Enter your code">
 <button onclick="join()">Join</button>
 <div id="playerArea"></div>
 </div>
@@ -110,18 +131,33 @@ renderPlayer()
 }
 
 function renderPlayer(){
-playerArea.innerHTML=`<b>${player.name}</b><br>Cards: ${player.hand.join(', ')}`
+playerArea.innerHTML=`<div class="sheet-title">${game.name||'Detective Notes'}</div><div class="sheet-sub">${player.name} — your cards: ${player.hand.join(', ')}</div>`
 
-let table='<table><tr><th>Card</th>'
-for(let i=0;i<game.players.length;i++)table+='<th></th>'
-table+='</tr>'
+let table='<div class="sheet-wrap"><table><thead><tr><th class="card">Cards</th>'
+for(let i=0;i<game.players.length;i++)table+=`<th>${i===0?'ME':'NOTE '+i}</th>`
+table+='</tr></thead><tbody>'
 
-function rows(arr){
-arr.forEach(n=>{
-table+=`<tr><td class='card'>${n}</td>`
-for(let i=0;i<game.players.length;i++){
-let val=player.hand.includes(n)&&i==0?'✓':''
-table+=`<td onclick="mark(this)">${val}</td>`
+function rows(arr,sectionClass,label){
+ table+=`<tr class="section ${sectionClass}"><td colspan="${game.players.length+1}">${label}</td></tr>`
+ arr.forEach(n=>{
+  table+=`<tr><td class="card">${n}</td>`
+  for(let i=0;i<game.players.length;i++){
+   let val=player.hand.includes(n)&&i==0?'✓':''
+   let cls=val==='✓'?'state-check':''
+   table+=`<td><button class="mark ${cls}" onclick="mark(this)">${val}</button></td>`
+  }
+  table+='</tr>'
+ })
+}
+
+rows(game.sus,'sec-sus','Suspects')
+rows(game.weap,'sec-weap','Weapons')
+rows(game.rooms,'sec-room','Rooms')
+
+table+='</tbody></table></div>'
+
+playerArea.innerHTML+=table
+playerArea.innerHTML+=`<div class="player-box"><div><b>How to mark:</b> tap a box to cycle blank → ✓ → X → •</div><div class="small">✓ = seen/have, X = ruled out, • = maybe</div></div>`
 }
 table+='</tr>'
 })
@@ -138,8 +174,11 @@ playerArea.innerHTML+=table
 
 function mark(td){
 let vals=['','✓','X','•']
+let classes=['','state-check','state-x','state-dot']
 let i=vals.indexOf(td.innerText)
-td.innerText=vals[(i+1)%4]
+let next=(i+1)%4
+td.innerText=vals[next]
+td.className='mark '+classes[next]
 }
 
 let params=new URLSearchParams(location.search)
