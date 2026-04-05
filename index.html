@@ -1,142 +1,151 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Clue Dealer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clue Game</title>
 <style>
-body{font-family:Arial;margin:0;background:#f4ecd8}
-.wrap{padding:12px}
-.panel{background:#fff;padding:12px;border:2px solid #b9aa8d;border-radius:10px;margin-bottom:10px}
-button{padding:8px 10px;margin:4px;border-radius:8px;cursor:pointer}
+body{font-family:Arial;background:#f4ecd8;margin:0;padding:10px}
+.panel{background:white;padding:10px;border:2px solid #b9aa8d;margin-bottom:10px;border-radius:10px}
+button{padding:6px 10px;margin:4px;border-radius:6px}
 .hidden{display:none}
-.code{font-weight:bold}
+table{width:100%;border-collapse:collapse}
+td,th{border:1px solid #aaa;text-align:center}
+.card{font-weight:bold;text-align:left;padding:5px}
 </style>
 </head>
 <body>
-<div class="wrap">
+
 <div class="panel">
-<h2>Game Builder</h2>
-<input id="boardName" placeholder="Game name"><br>
-<textarea id="players" placeholder="Players (one per line)"></textarea><br>
-<textarea id="suspects" placeholder="Suspects"></textarea><br>
-<textarea id="weapons" placeholder="Weapons"></textarea><br>
+<h3>Build Game</h3>
+<input id="name" placeholder="Game name"><br>
+<textarea id="players" placeholder="Players"></textarea><br>
+<textarea id="sus" placeholder="Suspects"></textarea><br>
+<textarea id="weap" placeholder="Weapons"></textarea><br>
 <textarea id="rooms" placeholder="Rooms"></textarea><br>
-<button id="start">Start Game</button>
+<button onclick="startGame()">Start Game</button>
 <div id="link"></div>
 </div>
 
-<div class="panel" id="hostPanel">
-<h2>Host Panel</h2>
+<div class="panel">
+<h3>Host Panel</h3>
 <div id="codes"></div>
 
-<h3>Accusation Checker</h3>
-<select id="accSus"></select>
-<select id="accWeap"></select>
-<select id="accRoom"></select>
-<button id="check">Check</button>
-<div id="result"></div>
+<h4>Accusation Checker</h4>
+<select id="a1"></select>
+<select id="a2"></select>
+<select id="a3"></select>
+<button onclick="checkAcc()">Check</button>
+<div id="res"></div>
 
-<h3>End Game</h3>
-<button id="revealBtn">Reveal Solution</button>
-<div id="solution" class="hidden"></div>
+<button onclick="reveal()">Reveal Solution</button>
+<div id="sol" class="hidden"></div>
 </div>
 
 <div class="panel">
-<h2>Join Game</h2>
-<input id="codeInput" placeholder="Enter code">
-<button id="join">Join</button>
-<div id="hand"></div>
-</div>
+<h3>Join</h3>
+<input id="code">
+<button onclick="join()">Join</button>
+<div id="playerArea"></div>
 </div>
 
 <script>
-function parse(t){return t.split('\n').map(x=>x.trim()).filter(Boolean)}
-function shuffle(a){return a.sort(()=>Math.random()-0.5)}
-function encode(o){return btoa(JSON.stringify(o))}
-function decode(s){return JSON.parse(atob(s))}
+function p(x){return x.split('\n').map(a=>a.trim()).filter(Boolean)}
+function sh(a){return a.sort(()=>Math.random()-0.5)}
+function enc(o){return btoa(JSON.stringify(o))}
+function dec(s){return JSON.parse(atob(s))}
 
-let game=null
+let game=null, player=null
 
-function buildGame(t){
-const s=shuffle([...t.suspects])
-const w=shuffle([...t.weapons])
-const r=shuffle([...t.rooms])
-const solution={suspect:s[0],weapon:w[0],room:r[0]}
-
-const deck=shuffle([
-...s.slice(1).map(x=>({cat:'suspects',name:x})),
-...w.slice(1).map(x=>({cat:'weapons',name:x})),
-...r.slice(1).map(x=>({cat:'rooms',name:x}))
-])
-
-const players=t.players.map(p=>({name:p,hand:[],code:Math.floor(1000+Math.random()*9000)}))
-deck.forEach((c,i)=>players[i%players.length].hand.push(c))
-
-return {...t,players,solution}
+function startGame(){
+let t={
+name:name.value,
+players:p(players.value),
+sus:p(sus.value),
+weap:p(weap.value),
+rooms:p(rooms.value)
 }
 
-function fillDropdowns(){
-['accSus','accWeap','accRoom'].forEach(id=>{
-const el=document.getElementById(id)
-el.innerHTML=''
-})
+let s=sh([...t.sus]), w=sh([...t.weap]), r=sh([...t.rooms])
+let sol={sus:s[0],weap:w[0],room:r[0]}
 
-game.suspects.forEach(x=>accSus.innerHTML+=`<option>${x}</option>`)
-game.weapons.forEach(x=>accWeap.innerHTML+=`<option>${x}</option>`)
-game.rooms.forEach(x=>accRoom.innerHTML+=`<option>${x}</option>`)
-}
+let deck=sh([...s.slice(1),...w.slice(1),...r.slice(1)])
+let playersArr=t.players.map(n=>({name:n,hand:[],code:Math.floor(1000+Math.random()*9000)}))
 
-start.onclick=()=>{
-const t={
-boardName:boardName.value,
-players:parse(players.value),
-suspects:parse(suspects.value),
-weapons:parse(weapons.value),
-rooms:parse(rooms.value)
-}
-if(t.players.length<2)return alert('Need players')
+deck.forEach((c,i)=>playersArr[i%playersArr.length].hand.push(c))
 
-game=buildGame(t)
+game={...t,players:playersArr,solution:sol}
 
-const url=location.origin+location.pathname+'?g='+encode(game)
+let url=location.origin+location.pathname+'?g='+enc(game)
 link.innerText=url
-history.replaceState(null,'','?g='+encode(game))
+history.replaceState(null,'','?g='+enc(game))
 
 codes.innerHTML=''
-game.players.forEach(p=>{
-codes.innerHTML+=`<div>${p.name}: <span class="code">${p.code}</span></div>`
+playersArr.forEach(p=>codes.innerHTML+=p.name+': '+p.code+'<br>')
+
+fillAcc()
+}
+
+function fillAcc(){
+a1.innerHTML=a2.innerHTML=a3.innerHTML=''
+game.sus.forEach(x=>a1.innerHTML+=`<option>${x}</option>`)
+game.weap.forEach(x=>a2.innerHTML+=`<option>${x}</option>`)
+game.rooms.forEach(x=>a3.innerHTML+=`<option>${x}</option>`)
+}
+
+function checkAcc(){
+let ok=a1.value==game.solution.sus && a2.value==game.solution.weap && a3.value==game.solution.room
+res.innerText=ok?"Correct":"Incorrect"
+}
+
+function reveal(){
+sol.classList.remove('hidden')
+sol.innerText=game.solution.sus+', '+game.solution.weap+', '+game.solution.room
+}
+
+function join(){
+let c=code.value
+player=game.players.find(x=>String(x.code)==c)
+if(!player)return alert('wrong code')
+renderPlayer()
+}
+
+function renderPlayer(){
+playerArea.innerHTML=`<b>${player.name}</b><br>Cards: ${player.hand.join(', ')}`
+
+let table='<table><tr><th>Card</th>'
+for(let i=0;i<game.players.length;i++)table+='<th></th>'
+table+='</tr>'
+
+function rows(arr){
+arr.forEach(n=>{
+table+=`<tr><td class='card'>${n}</td>`
+for(let i=0;i<game.players.length;i++){
+let val=player.hand.includes(n)&&i==0?'✓':''
+table+=`<td onclick="mark(this)">${val}</td>`
+}
+table+='</tr>'
 })
-
-fillDropdowns()
 }
 
-check.onclick=()=>{
-if(!game)return
-const correct=
-accSus.value===game.solution.suspect &&
-accWeap.value===game.solution.weapon &&
-accRoom.value===game.solution.room
+rows(game.sus)
+rows(game.weap)
+rows(game.rooms)
 
-result.innerText=correct?"Correct — mystery solved":"Incorrect"
+table+='</table>'
+
+playerArea.innerHTML+=table
 }
 
-revealBtn.onclick=()=>{
-solution.classList.remove('hidden')
-solution.innerText=`Suspect: ${game.solution.suspect}, Weapon: ${game.solution.weapon}, Room: ${game.solution.room}`
+function mark(td){
+let vals=['','✓','X','•']
+let i=vals.indexOf(td.innerText)
+td.innerText=vals[(i+1)%4]
 }
 
-join.onclick=()=>{
-if(!game)return alert('Load game')
-const p=game.players.find(x=>String(x.code)===codeInput.value)
-if(!p)return alert('Invalid code')
-hand.innerText='Your cards: '+p.hand.map(c=>c.name).join(', ')
-}
-
-const params=new URLSearchParams(location.search)
+let params=new URLSearchParams(location.search)
 if(params.get('g')){
-game=decode(params.get('g'))
-fillDropdowns()
+game=dec(params.get('g'))
+fillAcc()
 }
 </script>
 </body>
