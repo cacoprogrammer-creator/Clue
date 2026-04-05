@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Detective Notes Builder</title>
+  <title>Clue Dealer + Detective Notes</title>
   <style>
     :root {
       --bg: #efe6d1;
@@ -19,7 +19,6 @@
     }
 
     * { box-sizing: border-box; }
-
     body {
       margin: 0;
       background: linear-gradient(180deg, #ece0c6, #f5eddc 45%, #ece0c6);
@@ -52,11 +51,15 @@
       text-transform: uppercase;
     }
 
-    .subtitle {
-      margin: 8px 0 0;
+    h2, h3 {
+      margin: 0 0 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .subtitle, .tiny {
       color: var(--muted);
       line-height: 1.45;
-      max-width: 900px;
     }
 
     .toolbar {
@@ -92,25 +95,12 @@
 
     .layout {
       display: grid;
-      grid-template-columns: 360px 1fr;
+      grid-template-columns: 380px 1fr;
       gap: 12px;
     }
 
-    .panel {
-      padding: 14px;
-    }
-
-    .panel h2 {
-      margin: 0 0 10px;
-      font-size: 1rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .builder-grid {
-      display: grid;
-      gap: 10px;
-    }
+    .panel { padding: 14px; }
+    .builder-grid { display: grid; gap: 10px; }
 
     label {
       display: block;
@@ -136,23 +126,47 @@
       line-height: 1.4;
     }
 
-    .share-box {
+    .share-box, .code-box, .hand-box {
       border: 1px dashed var(--line);
       border-radius: 10px;
       padding: 10px;
       background: var(--paper-2);
     }
 
-    .share-row {
+    .share-row, .join-row {
       display: grid;
       grid-template-columns: 1fr auto;
       gap: 8px;
+      align-items: center;
     }
 
-    .tiny {
-      color: var(--muted);
-      font-size: 0.86rem;
-      line-height: 1.4;
+    .host-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .code-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .code-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fffdf8;
+    }
+
+    .code-badge {
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      font-size: 1rem;
     }
 
     .sheet-top {
@@ -214,7 +228,6 @@
     }
 
     thead .card-col { z-index: 3; }
-
     .section-cell {
       text-align: left;
       padding: 8px 10px;
@@ -224,7 +237,6 @@
       letter-spacing: 0.08em;
       color: #21170f;
     }
-
     .sec-suspects td { background: var(--suspects); }
     .sec-weapons td { background: var(--weapons); }
     .sec-rooms td { background: var(--rooms); }
@@ -244,6 +256,7 @@
     .state-check { background: #e4f0e4; color: #244d29; }
     .state-x { background: #f6e0e0; color: #7a2323; }
     .state-dot { background: #efe8d8; color: #6d5d48; }
+    .state-own { background: #e4f0e4; color: #244d29; }
 
     .bottom-grid {
       display: grid;
@@ -257,20 +270,6 @@
       border-radius: 12px;
       background: #fffdf8;
       padding: 12px;
-    }
-
-    .accusation-box h3, .notes-box h3, .player-names h3 {
-      margin: 0 0 10px;
-      font-size: 0.98rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .player-name-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-bottom: 10px;
     }
 
     .summary {
@@ -293,13 +292,13 @@
       margin-bottom: 3px;
     }
 
+    .hidden { display: none; }
+
     @media (max-width: 1080px) {
-      .layout { grid-template-columns: 1fr; }
-      .bottom-grid { grid-template-columns: 1fr; }
+      .layout, .host-grid, .bottom-grid { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 760px) {
-      .player-name-grid { grid-template-columns: 1fr 1fr; }
       .summary { grid-template-columns: 1fr 1fr; }
       .card-col { min-width: 150px; }
     }
@@ -308,12 +307,12 @@
 <body>
   <div class="wrap">
     <section class="hero">
-      <h1>Detective Notes Builder</h1>
-      <p class="subtitle">Custom built board</p>
+      <h1>Clue Dealer + Detective Notes</h1>
+      <p class="subtitle">Build a custom card set, deal the hands automatically, and give each player a private 4-digit code. Everyone uses the same game link, enters their own code, and sees only their own hand and notes sheet.</p>
       <div class="toolbar">
-        <button class="primary" id="buildLinkBtn">Generate Share Link</button>
+        <button class="primary" id="startGameBtn">Start Game + Generate Codes</button>
         <button id="useClassicBtn">Load Classic Clue</button>
-        <button id="resetNotesBtn">Reset My Notes</button>
+        <button id="copyGameLinkBtn">Copy Game Link</button>
         <button id="exportBtn">Export My Notes</button>
         <button id="importBtn">Import My Notes</button>
         <input id="importFile" type="file" accept="application/json" hidden />
@@ -323,21 +322,15 @@
 
     <div class="layout">
       <section class="panel">
-        <h2>Board builder</h2>
+        <h2>Game builder</h2>
         <div class="builder-grid">
           <div>
-            <label for="boardName">Board name</label>
+            <label for="boardName">Game name</label>
             <input id="boardName" placeholder="Mystery Night" />
           </div>
           <div>
-            <label for="playerCount">Player columns</label>
-            <select id="playerCount">
-              <option value="4">4</option>
-              <option value="5">5</option>
-              <option value="6" selected>6</option>
-              <option value="7">7</option>
-              <option value="8">8</option>
-            </select>
+            <label for="playerNamesInput">Player names (one per line)</label>
+            <textarea id="playerNamesInput"></textarea>
           </div>
           <div>
             <label for="suspectsInput">Suspects / characters (one per line)</label>
@@ -352,55 +345,75 @@
             <textarea id="roomsInput"></textarea>
           </div>
           <div class="share-box">
-            <label for="shareLink">Share link</label>
+            <label for="shareLink">Game link</label>
             <div class="share-row">
-              <input id="shareLink" readonly placeholder="Click Generate Share Link" />
+              <input id="shareLink" readonly placeholder="Click Start Game first" />
               <button id="copyLinkBtn">Copy</button>
             </div>
-            <div class="tiny" id="shareHint">Share this link with your group.</div>
+            <div class="tiny" id="shareHint">Everyone opens the same game link.</div>
           </div>
         </div>
       </section>
 
       <section class="panel">
-        <div class="sheet-top">
-          <div>
-            <div class="sheet-title" id="boardTitle">Classic Clue</div>
-            <div class="sheet-subtitle">Detective notes</div>
-          </div>
-        </div>
-
-        <div class="player-names">
-          <h3>Column labels</h3>
-          <div class="player-name-grid" id="playerNamesGrid"></div>
-        </div>
-
-        <div class="scroll-x">
-          <table>
-            <thead id="sheetHead"></thead>
-            <tbody id="sheetBody"></tbody>
-          </table>
-        </div>
-
-        <div class="summary">
-          <div class="stat"><strong id="checkCount">0</strong><span class="tiny">Checks</span></div>
-          <div class="stat"><strong id="xCount">0</strong><span class="tiny">X marks</span></div>
-          <div class="stat"><strong id="dotCount">0</strong><span class="tiny">Dots</span></div>
-          <div class="stat"><strong id="rowCount">0</strong><span class="tiny">Cards</span></div>
-        </div>
-
-        <div class="bottom-grid">
-          <div class="accusation-box">
-            <h3>Final accusation</h3>
-            <div class="builder-grid">
-              <input id="solutionSuspect" placeholder="Suspect" />
-              <input id="solutionWeapon" placeholder="Weapon" />
-              <input id="solutionRoom" placeholder="Room" />
+        <div id="hostView">
+          <h2>Host setup</h2>
+          <div class="tiny" style="margin-bottom:10px;">After you start the game, this area will show the player codes. Give each person only their own code.</div>
+          <div class="host-grid">
+            <div class="code-box">
+              <h3>Player codes</h3>
+              <div id="codeList" class="code-list"></div>
+            </div>
+            <div class="hand-box">
+              <h3>Case file</h3>
+              <div class="tiny">This is only visible on the device that started the game.</div>
+              <div id="caseFilePreview" style="margin-top:10px;font-weight:700;"></div>
             </div>
           </div>
-          <div class="notes-box">
-            <h3>Detective notes</h3>
-            <textarea id="generalNotes" placeholder="Turn-by-turn notes, reveals, guesses, and logic..."></textarea>
+        </div>
+
+        <div id="joinView">
+          <div class="sheet-top">
+            <div>
+              <div class="sheet-title" id="boardTitle">Detective Notes</div>
+              <div class="sheet-subtitle" id="playerHeader">Enter your code to load your hand</div>
+            </div>
+          </div>
+
+          <div class="join-row" style="margin-bottom:12px;">
+            <input id="playerCodeInput" placeholder="Enter your 4-digit code" maxlength="4" />
+            <button id="joinBtn">Open My Hand</button>
+          </div>
+
+          <div id="myHandBox" class="hand-box hidden" style="margin-bottom:12px;"></div>
+
+          <div class="scroll-x">
+            <table>
+              <thead id="sheetHead"></thead>
+              <tbody id="sheetBody"></tbody>
+            </table>
+          </div>
+
+          <div class="summary">
+            <div class="stat"><strong id="checkCount">0</strong><span class="tiny">Checks</span></div>
+            <div class="stat"><strong id="xCount">0</strong><span class="tiny">X marks</span></div>
+            <div class="stat"><strong id="dotCount">0</strong><span class="tiny">Dots</span></div>
+            <div class="stat"><strong id="rowCount">0</strong><span class="tiny">Cards</span></div>
+          </div>
+
+          <div class="bottom-grid">
+            <div class="accusation-box">
+              <h3>Final accusation</h3>
+              <div class="builder-grid">
+                <input id="solutionSuspect" placeholder="Suspect" />
+                <input id="solutionWeapon" placeholder="Weapon" />
+                <input id="solutionRoom" placeholder="Room" />
+              </div>
+            </div>
+            <div class="notes-box">
+              <h3>Detective notes</h3>
+              <textarea id="generalNotes" placeholder="Turn-by-turn notes, reveals, guesses, and logic..."></textarea>
+            </div>
           </div>
         </div>
       </section>
@@ -410,103 +423,189 @@
   <script>
     const CLASSIC_TEMPLATE = {
       boardName: 'Classic Clue',
-      playerCount: 6,
+      players: ['P1', 'P2', 'P3', 'P4'],
       suspects: ['Miss Scarlet', 'Colonel Mustard', 'Mrs. White', 'Mr. Green', 'Mrs. Peacock', 'Professor Plum'],
       weapons: ['Candlestick', 'Knife', 'Lead Pipe', 'Revolver', 'Rope', 'Wrench'],
       rooms: ['Kitchen', 'Ballroom', 'Conservatory', 'Dining Room', 'Billiard Room', 'Library', 'Lounge', 'Hall', 'Study']
     };
 
     const MARKS = ['', '✓', '✕', '•'];
+    const LOCAL_NOTES_PREFIX = 'clue-notes-v1-';
 
     function parseLines(text) {
       return text.split('\n').map(x => x.trim()).filter(Boolean);
     }
 
-    function encodeTemplate(template) {
-      return btoa(unescape(encodeURIComponent(JSON.stringify(template))));
+    function shuffle(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
     }
 
-    function decodeTemplate(encoded) {
+    function encodeData(obj) {
+      return btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
+    }
+
+    function decodeData(str) {
       try {
-        return JSON.parse(decodeURIComponent(escape(atob(encoded))));
+        return JSON.parse(decodeURIComponent(escape(atob(str))));
       } catch {
         return null;
       }
     }
 
-    function getTemplateFromUrl() {
+    function gameFromUrl() {
       const params = new URLSearchParams(window.location.search);
-      const encoded = params.get('board');
-      if (!encoded) return CLASSIC_TEMPLATE;
-      const parsed = decodeTemplate(encoded);
-      return parsed && parsed.suspects && parsed.weapons && parsed.rooms ? parsed : CLASSIC_TEMPLATE;
+      const encoded = params.get('game');
+      return encoded ? decodeData(encoded) : null;
     }
 
-    function storageKey(template) {
-      return 'clue-sheet-' + encodeTemplate(template).slice(0, 80);
+    function randomCode(existing) {
+      let code;
+      do {
+        code = String(Math.floor(1000 + Math.random() * 9000));
+      } while (existing.has(code));
+      return code;
     }
 
-    let currentTemplate = getTemplateFromUrl();
-    let STORAGE_KEY = storageKey(currentTemplate);
-
-    function blankState(template) {
-      const cols = Number(template.playerCount || 6);
-      const defaultNames = Array.from({ length: cols }, (_, i) => 'P' + (i + 1));
-      const makeItem = (name) => ({ name, marks: Array(cols).fill('') });
-      return {
-        boardName: template.boardName || 'Custom Clue',
-        playerCount: cols,
-        playerNames: defaultNames,
-        suspects: (template.suspects || []).map(makeItem),
-        weapons: (template.weapons || []).map(makeItem),
-        rooms: (template.rooms || []).map(makeItem),
-        generalNotes: '',
-        solutionSuspect: '',
-        solutionWeapon: '',
-        solutionRoom: ''
+    function buildGameData(template) {
+      const suspects = shuffle(template.suspects);
+      const weapons = shuffle(template.weapons);
+      const rooms = shuffle(template.rooms);
+      const caseFile = {
+        suspect: suspects[0],
+        weapon: weapons[0],
+        room: rooms[0]
       };
-    }
 
-    function loadState() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? JSON.parse(raw) : blankState(currentTemplate);
-      } catch {
-        return blankState(currentTemplate);
-      }
-    }
+      const deck = shuffle([
+        ...suspects.slice(1).map(name => ({ category: 'suspects', name })),
+        ...weapons.slice(1).map(name => ({ category: 'weapons', name })),
+        ...rooms.slice(1).map(name => ({ category: 'rooms', name }))
+      ]);
 
-    let state = loadState();
+      const players = template.players.map(name => ({ name, code: '', hand: [] }));
+      deck.forEach((card, index) => {
+        players[index % players.length].hand.push(card);
+      });
 
-    function saveState() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      document.getElementById('saveStatus').textContent = 'Saved automatically on this device.';
-      updateSummary();
-    }
+      const used = new Set();
+      players.forEach(player => {
+        player.code = randomCode(used);
+        used.add(player.code);
+      });
 
-    function fillBuilder(template) {
-      document.getElementById('boardName').value = template.boardName || '';
-      document.getElementById('playerCount').value = String(template.playerCount || 6);
-      document.getElementById('suspectsInput').value = (template.suspects || []).join('\n');
-      document.getElementById('weaponsInput').value = (template.weapons || []).join('\n');
-      document.getElementById('roomsInput').value = (template.rooms || []).join('\n');
+      return {
+        boardName: template.boardName,
+        suspects: template.suspects,
+        weapons: template.weapons,
+        rooms: template.rooms,
+        players,
+        caseFile
+      };
     }
 
     function builderTemplate() {
       return {
         boardName: document.getElementById('boardName').value.trim() || 'Custom Clue',
-        playerCount: Number(document.getElementById('playerCount').value || 6),
+        players: parseLines(document.getElementById('playerNamesInput').value),
         suspects: parseLines(document.getElementById('suspectsInput').value),
         weapons: parseLines(document.getElementById('weaponsInput').value),
         rooms: parseLines(document.getElementById('roomsInput').value)
       };
     }
 
+    function fillBuilder(template) {
+      document.getElementById('boardName').value = template.boardName || '';
+      document.getElementById('playerNamesInput').value = (template.players || []).join('\n');
+      document.getElementById('suspectsInput').value = (template.suspects || []).join('\n');
+      document.getElementById('weaponsInput').value = (template.weapons || []).join('\n');
+      document.getElementById('roomsInput').value = (template.rooms || []).join('\n');
+    }
+
+    let game = gameFromUrl();
+    let currentPlayer = null;
+    let noteState = null;
+
+    function blankNoteState(game, player) {
+      const playerCount = game.players.length;
+      const defaultCols = game.players.map(p => p.name);
+      const makeItems = (items) => items.map(name => ({ name, marks: Array(playerCount).fill('') }));
+      const state = {
+        boardName: game.boardName,
+        playerNames: defaultCols,
+        suspects: makeItems(game.suspects),
+        weapons: makeItems(game.weapons),
+        rooms: makeItems(game.rooms),
+        generalNotes: '',
+        solutionSuspect: '',
+        solutionWeapon: '',
+        solutionRoom: ''
+      };
+
+      player.hand.forEach(card => {
+        const row = state[card.category].find(x => x.name === card.name);
+        if (row) row.marks[0] = '✓';
+      });
+      return state;
+    }
+
+    function notesKey(game, player) {
+      return LOCAL_NOTES_PREFIX + encodeData({ board: game.boardName, player: player.name, code: player.code }).slice(0, 100);
+    }
+
+    function loadNotes(game, player) {
+      const key = notesKey(game, player);
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : blankNoteState(game, player);
+      } catch {
+        return blankNoteState(game, player);
+      }
+    }
+
+    function saveNotes() {
+      if (!game || !currentPlayer || !noteState) return;
+      localStorage.setItem(notesKey(game, currentPlayer), JSON.stringify(noteState));
+      document.getElementById('saveStatus').textContent = 'Saved automatically on this device.';
+      updateSummary();
+    }
+
+    function fillHostArea() {
+      if (!game) return;
+      document.getElementById('boardTitle').textContent = game.boardName;
+      const codeList = document.getElementById('codeList');
+      codeList.innerHTML = '';
+      game.players.forEach(player => {
+        const row = document.createElement('div');
+        row.className = 'code-row';
+        row.innerHTML = `<span>${player.name}</span><span class="code-badge">${player.code}</span>`;
+        codeList.appendChild(row);
+      });
+      document.getElementById('caseFilePreview').innerHTML = `Suspect: ${game.caseFile.suspect}<br>Weapon: ${game.caseFile.weapon}<br>Room: ${game.caseFile.room}`;
+    }
+
+    function renderJoinHeader() {
+      const header = document.getElementById('playerHeader');
+      const handBox = document.getElementById('myHandBox');
+      if (!currentPlayer) {
+        header.textContent = 'Enter your code to load your hand';
+        handBox.classList.add('hidden');
+        return;
+      }
+      header.textContent = currentPlayer.name + ' — your notes sheet';
+      handBox.classList.remove('hidden');
+      handBox.innerHTML = `<h3>Your cards</h3><div>${currentPlayer.hand.map(card => card.name).join(', ') || 'No cards'}</div>`;
+    }
+
     function cycleMark(section, rowIndex, colIndex) {
-      const current = state[section][rowIndex].marks[colIndex] || '';
+      const current = noteState[section][rowIndex].marks[colIndex] || '';
       const next = MARKS[(MARKS.indexOf(current) + 1) % MARKS.length];
-      state[section][rowIndex].marks[colIndex] = next;
-      saveState();
+      noteState[section][rowIndex].marks[colIndex] = next;
+      saveNotes();
       renderSheet();
     }
 
@@ -517,37 +616,12 @@
       return '';
     }
 
-    function renderPlayerNameInputs() {
-  const grid = document.getElementById('playerNamesGrid');
-  grid.innerHTML = '';
-  for (let i = 0; i < state.playerCount; i++) {
-    const input = document.createElement('input');
-    input.value = state.playerNames?.[i] || ('P' + (i + 1));
-    input.placeholder = 'P' + (i + 1);
-
-    input.addEventListener('input', (e) => {
-      state.playerNames[i] = e.target.value;
-      saveState();
-    });
-
-    input.addEventListener('change', () => {
-      renderSheet();
-    });
-
-    grid.appendChild(input);
-  }
-}
-
     function renderSheet() {
-      document.getElementById('boardTitle').textContent = state.boardName || 'Clue Sheet';
-      document.title = (state.boardName || 'Clue Sheet') + ' - Detective Notes';
-
-      renderPlayerNameInputs();
-
       const head = document.getElementById('sheetHead');
       const body = document.getElementById('sheetBody');
       head.innerHTML = '';
       body.innerHTML = '';
+      if (!game || !noteState) return;
 
       const headerRow = document.createElement('tr');
       const first = document.createElement('th');
@@ -555,11 +629,11 @@
       first.textContent = 'Cards';
       headerRow.appendChild(first);
 
-      for (let i = 0; i < state.playerCount; i++) {
+      noteState.playerNames.forEach(name => {
         const th = document.createElement('th');
-        th.textContent = state.playerNames?.[i] || ('P' + (i + 1));
+        th.textContent = name;
         headerRow.appendChild(th);
-      }
+      });
       head.appendChild(headerRow);
 
       const sections = [
@@ -572,15 +646,14 @@
         const sectionRow = document.createElement('tr');
         sectionRow.className = className;
         const td = document.createElement('td');
-        td.colSpan = state.playerCount + 1;
+        td.colSpan = noteState.playerNames.length + 1;
         td.className = 'section-cell';
         td.textContent = label;
         sectionRow.appendChild(td);
         body.appendChild(sectionRow);
 
-        state[key].forEach((item, rowIndex) => {
+        noteState[key].forEach((item, rowIndex) => {
           const tr = document.createElement('tr');
-
           const nameTd = document.createElement('td');
           nameTd.className = 'card-col';
           nameTd.textContent = item.name;
@@ -595,23 +668,29 @@
             td.appendChild(btn);
             tr.appendChild(td);
           });
-
           body.appendChild(tr);
         });
       });
 
-      document.getElementById('generalNotes').value = state.generalNotes;
-      document.getElementById('solutionSuspect').value = state.solutionSuspect;
-      document.getElementById('solutionWeapon').value = state.solutionWeapon;
-      document.getElementById('solutionRoom').value = state.solutionRoom;
+      document.getElementById('generalNotes').value = noteState.generalNotes;
+      document.getElementById('solutionSuspect').value = noteState.solutionSuspect;
+      document.getElementById('solutionWeapon').value = noteState.solutionWeapon;
+      document.getElementById('solutionRoom').value = noteState.solutionRoom;
       updateSummary();
     }
 
     function updateSummary() {
+      if (!noteState) {
+        document.getElementById('checkCount').textContent = '0';
+        document.getElementById('xCount').textContent = '0';
+        document.getElementById('dotCount').textContent = '0';
+        document.getElementById('rowCount').textContent = '0';
+        return;
+      }
       let checks = 0, xs = 0, dots = 0, rows = 0;
       ['suspects','weapons','rooms'].forEach(section => {
-        rows += state[section].length;
-        state[section].forEach(item => {
+        rows += noteState[section].length;
+        noteState[section].forEach(item => {
           item.marks.forEach(mark => {
             if (mark === '✓') checks++;
             else if (mark === '✕') xs++;
@@ -625,42 +704,37 @@
       document.getElementById('rowCount').textContent = rows;
     }
 
-    function bindInput(id, key) {
+    function bindNoteInput(id, key) {
       document.getElementById(id).addEventListener('input', (e) => {
-        state[key] = e.target.value;
-        saveState();
+        if (!noteState) return;
+        noteState[key] = e.target.value;
+        saveNotes();
       });
     }
 
-    bindInput('generalNotes', 'generalNotes');
-    bindInput('solutionSuspect', 'solutionSuspect');
-    bindInput('solutionWeapon', 'solutionWeapon');
-    bindInput('solutionRoom', 'solutionRoom');
+    bindNoteInput('generalNotes', 'generalNotes');
+    bindNoteInput('solutionSuspect', 'solutionSuspect');
+    bindNoteInput('solutionWeapon', 'solutionWeapon');
+    bindNoteInput('solutionRoom', 'solutionRoom');
 
-    document.getElementById('buildLinkBtn').addEventListener('click', () => {
+    document.getElementById('startGameBtn').addEventListener('click', () => {
       const template = builderTemplate();
-      if (!template.suspects.length || !template.weapons.length || !template.rooms.length) {
-        alert('Add at least one entry in each category first.');
-        return;
-      }
-      const encoded = encodeTemplate(template);
-      const url = window.location.origin + window.location.pathname + '?board=' + encodeURIComponent(encoded);
-      document.getElementById('shareLink').value = url;
-      document.getElementById('shareHint').textContent = 'Share this link with your group.';
-
-      currentTemplate = template;
-      STORAGE_KEY = storageKey(currentTemplate);
-      state = blankState(currentTemplate);
-      saveState();
+      if (template.players.length < 2) return alert('Add at least 2 player names.');
+      if (!template.suspects.length || !template.weapons.length || !template.rooms.length) return alert('Add suspects, weapons, and rooms first.');
+      game = buildGameData(template);
+      const link = window.location.origin + window.location.pathname + '?game=' + encodeURIComponent(encodeData(game));
+      document.getElementById('shareLink').value = link;
+      history.replaceState(null, '', '?game=' + encodeURIComponent(encodeData(game)));
+      fillHostArea();
+      currentPlayer = null;
+      noteState = null;
+      renderJoinHeader();
       renderSheet();
     });
 
     document.getElementById('copyLinkBtn').addEventListener('click', async () => {
       const link = document.getElementById('shareLink').value.trim();
-      if (!link) {
-        alert('Generate a share link first.');
-        return;
-      }
+      if (!link) return alert('Start a game first.');
       try {
         await navigator.clipboard.writeText(link);
         document.getElementById('shareHint').textContent = 'Copied.';
@@ -669,25 +743,28 @@
       }
     });
 
-    document.getElementById('useClassicBtn').addEventListener('click', () => {
-      currentTemplate = CLASSIC_TEMPLATE;
-      STORAGE_KEY = storageKey(currentTemplate);
-      fillBuilder(currentTemplate);
-      document.getElementById('shareLink').value = window.location.origin + window.location.pathname + '?board=' + encodeURIComponent(encodeTemplate(currentTemplate));
-      state = loadState();
-      saveState();
+    document.getElementById('copyGameLinkBtn').addEventListener('click', () => {
+      document.getElementById('copyLinkBtn').click();
+    });
+
+    document.getElementById('joinBtn').addEventListener('click', () => {
+      if (!game) return alert('Open a game link first or start a game.');
+      const code = document.getElementById('playerCodeInput').value.trim();
+      const player = game.players.find(p => p.code === code);
+      if (!player) return alert('Code not found.');
+      currentPlayer = player;
+      noteState = loadNotes(game, player);
+      renderJoinHeader();
       renderSheet();
     });
 
-    document.getElementById('resetNotesBtn').addEventListener('click', () => {
-      if (!window.confirm('Reset your notes for this board on this device?')) return;
-      state = blankState(currentTemplate);
-      saveState();
-      renderSheet();
+    document.getElementById('useClassicBtn').addEventListener('click', () => {
+      fillBuilder(CLASSIC_TEMPLATE);
     });
 
     document.getElementById('exportBtn').addEventListener('click', () => {
-      const exportData = { template: currentTemplate, state };
+      if (!game || !currentPlayer || !noteState) return alert('Open your hand first.');
+      const exportData = { game, playerCode: currentPlayer.code, noteState };
       const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -706,23 +783,35 @@
       if (!file) return;
       try {
         const imported = JSON.parse(await file.text());
-        if (imported.template) {
-          currentTemplate = imported.template;
-          STORAGE_KEY = storageKey(currentTemplate);
-          fillBuilder(currentTemplate);
-          document.getElementById('shareLink').value = window.location.origin + window.location.pathname + '?board=' + encodeURIComponent(encodeTemplate(currentTemplate));
+        if (imported.game) {
+          game = imported.game;
+          const link = window.location.origin + window.location.pathname + '?game=' + encodeURIComponent(encodeData(game));
+          document.getElementById('shareLink').value = link;
+          history.replaceState(null, '', '?game=' + encodeURIComponent(encodeData(game)));
+          fillBuilder({ boardName: game.boardName, players: game.players.map(p => p.name), suspects: game.suspects, weapons: game.weapons, rooms: game.rooms });
+          fillHostArea();
         }
-        state = imported.state || blankState(currentTemplate);
-        saveState();
-        renderSheet();
+        const player = game.players.find(p => p.code === imported.playerCode);
+        if (player && imported.noteState) {
+          currentPlayer = player;
+          noteState = imported.noteState;
+          saveNotes();
+          renderJoinHeader();
+          renderSheet();
+        }
       } catch {
         alert('That file could not be imported.');
       }
       e.target.value = '';
     });
 
-    fillBuilder(currentTemplate);
-    document.getElementById('shareLink').value = window.location.href;
+    fillBuilder(CLASSIC_TEMPLATE);
+    if (game) {
+      fillBuilder({ boardName: game.boardName, players: game.players.map(p => p.name), suspects: game.suspects, weapons: game.weapons, rooms: game.rooms });
+      document.getElementById('shareLink').value = window.location.href;
+      fillHostArea();
+    }
+    renderJoinHeader();
     renderSheet();
   </script>
 </body>
