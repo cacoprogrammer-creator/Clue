@@ -1,818 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Clue Dealer + Detective Notes</title>
-  <style>
-    :root {
-      --bg: #efe6d1;
-      --paper: #fffaf0;
-      --paper-2: #f7eed9;
-      --ink: #2c241b;
-      --muted: #6b604f;
-      --line: #b9aa8d;
-      --suspects: #d6b36f;
-      --weapons: #c97c7c;
-      --rooms: #7fa17c;
-      --shadow: 0 10px 28px rgba(55, 41, 19, 0.12);
-    }
-
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background: linear-gradient(180deg, #ece0c6, #f5eddc 45%, #ece0c6);
-      color: var(--ink);
-      font-family: Arial, Helvetica, sans-serif;
-    }
-
-    .wrap {
-      width: min(1440px, calc(100% - 16px));
-      margin: 0 auto;
-      padding: 12px 0 24px;
-    }
-
-    .hero, .panel {
-      background: var(--paper);
-      border: 2px solid var(--line);
-      border-radius: 14px;
-      box-shadow: var(--shadow);
-    }
-
-    .hero {
-      padding: 14px;
-      margin-bottom: 12px;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(1.6rem, 3vw, 2.6rem);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-
-    h2, h3 {
-      margin: 0 0 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .subtitle, .tiny {
-      color: var(--muted);
-      line-height: 1.45;
-    }
-
-    .toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 12px;
-    }
-
-    button {
-      appearance: none;
-      border: 1px solid var(--line);
-      background: #fffdf8;
-      color: var(--ink);
-      padding: 9px 12px;
-      border-radius: 10px;
-      cursor: pointer;
-      font: inherit;
-      font-weight: 700;
-    }
-
-    button.primary {
-      background: #2f2419;
-      color: #fffaf2;
-      border-color: #2f2419;
-    }
-
-    .status {
-      margin-top: 10px;
-      color: var(--muted);
-      font-size: 0.9rem;
-    }
-
-    .layout {
-      display: grid;
-      grid-template-columns: 380px 1fr;
-      gap: 12px;
-    }
-
-    .panel { padding: 14px; }
-    .builder-grid { display: grid; gap: 10px; }
-
-    label {
-      display: block;
-      font-size: 0.88rem;
-      color: var(--muted);
-      margin-bottom: 5px;
-      font-weight: 700;
-    }
-
-    input, textarea, select {
-      width: 100%;
-      border: 1px solid var(--line);
-      background: #fffdf9;
-      color: var(--ink);
-      border-radius: 8px;
-      padding: 9px 10px;
-      font: inherit;
-    }
-
-    textarea {
-      min-height: 88px;
-      resize: vertical;
-      line-height: 1.4;
-    }
-
-    .share-box, .code-box, .hand-box {
-      border: 1px dashed var(--line);
-      border-radius: 10px;
-      padding: 10px;
-      background: var(--paper-2);
-    }
-
-    .share-row, .join-row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .host-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    .code-list {
-      display: grid;
-      gap: 8px;
-    }
-
-    .code-row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 8px;
-      align-items: center;
-      padding: 8px 10px;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: #fffdf8;
-    }
-
-    .code-badge {
-      font-weight: 800;
-      letter-spacing: 0.12em;
-      font-size: 1rem;
-    }
-
-    .sheet-top {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      align-items: end;
-      margin-bottom: 8px;
-      flex-wrap: wrap;
-    }
-
-    .sheet-title {
-      font-size: 1.15rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .sheet-subtitle {
-      font-size: 0.86rem;
-      color: var(--muted);
-      margin-top: 4px;
-    }
-
-    .scroll-x { overflow-x: auto; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #fffdf8;
-      border: 2px solid var(--line);
-    }
-
-    th, td {
-      border: 1px solid #ccbda1;
-      padding: 0;
-      text-align: center;
-      font-size: 0.88rem;
-    }
-
-    thead th {
-      background: #efe4ca;
-      padding: 7px 4px;
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      min-width: 38px;
-    }
-
-    .card-col {
-      min-width: 190px;
-      text-align: left;
-      padding: 8px 10px;
-      font-weight: 700;
-      background: #fff9eb;
-      position: sticky;
-      left: 0;
-      z-index: 2;
-    }
-
-    thead .card-col { z-index: 3; }
-    .section-cell {
-      text-align: left;
-      padding: 8px 10px;
-      font-size: 0.8rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #21170f;
-    }
-    .sec-suspects td { background: var(--suspects); }
-    .sec-weapons td { background: var(--weapons); }
-    .sec-rooms td { background: var(--rooms); }
-
-    .mark-btn {
-      width: 100%;
-      min-width: 38px;
-      height: 34px;
-      border: 0;
-      background: #fffdf8;
-      font-weight: 800;
-      font-size: 0.95rem;
-      cursor: pointer;
-      color: var(--ink);
-    }
-
-    .state-check { background: #e4f0e4; color: #244d29; }
-    .state-x { background: #f6e0e0; color: #7a2323; }
-    .state-dot { background: #efe8d8; color: #6d5d48; }
-    .state-own { background: #e4f0e4; color: #244d29; }
-
-    .bottom-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 12px;
-    }
-
-    .accusation-box, .notes-box {
-      border: 2px solid var(--line);
-      border-radius: 12px;
-      background: #fffdf8;
-      padding: 12px;
-    }
-
-    .summary {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .stat {
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 9px;
-      background: #fffdf8;
-    }
-
-    .stat strong {
-      display: block;
-      font-size: 1.2rem;
-      margin-bottom: 3px;
-    }
-
-    .hidden { display: none; }
-
-    @media (max-width: 1080px) {
-      .layout, .host-grid, .bottom-grid { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 760px) {
-      .summary { grid-template-columns: 1fr 1fr; }
-      .card-col { min-width: 150px; }
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Clue Dealer</title>
+<style>
+body{font-family:Arial;margin:0;background:#f4ecd8}
+.wrap{padding:12px}
+.panel{background:#fff;padding:12px;border:2px solid #b9aa8d;border-radius:10px;margin-bottom:10px}
+button{padding:8px 10px;margin:4px;border-radius:8px;cursor:pointer}
+.hidden{display:none}
+.code{font-weight:bold}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <section class="hero">
-      <h1>Clue Dealer + Detective Notes</h1>
-      <p class="subtitle">Build a custom card set, deal the hands automatically, and give each player a private 4-digit code. Everyone uses the same game link, enters their own code, and sees only their own hand and notes sheet.</p>
-      <div class="toolbar">
-        <button class="primary" id="startGameBtn">Start Game + Generate Codes</button>
-        <button id="useClassicBtn">Load Classic Clue</button>
-        <button id="copyGameLinkBtn">Copy Game Link</button>
-        <button id="exportBtn">Export My Notes</button>
-        <button id="importBtn">Import My Notes</button>
-        <input id="importFile" type="file" accept="application/json" hidden />
-      </div>
-      <div class="status" id="saveStatus">Saved automatically on this device.</div>
-    </section>
+<div class="wrap">
+<div class="panel">
+<h2>Game Builder</h2>
+<input id="boardName" placeholder="Game name"><br>
+<textarea id="players" placeholder="Players (one per line)"></textarea><br>
+<textarea id="suspects" placeholder="Suspects"></textarea><br>
+<textarea id="weapons" placeholder="Weapons"></textarea><br>
+<textarea id="rooms" placeholder="Rooms"></textarea><br>
+<button id="start">Start Game</button>
+<div id="link"></div>
+</div>
 
-    <div class="layout">
-      <section class="panel">
-        <h2>Game builder</h2>
-        <div class="builder-grid">
-          <div>
-            <label for="boardName">Game name</label>
-            <input id="boardName" placeholder="Mystery Night" />
-          </div>
-          <div>
-            <label for="playerNamesInput">Player names (one per line)</label>
-            <textarea id="playerNamesInput"></textarea>
-          </div>
-          <div>
-            <label for="suspectsInput">Suspects / characters (one per line)</label>
-            <textarea id="suspectsInput"></textarea>
-          </div>
-          <div>
-            <label for="weaponsInput">Weapons / items (one per line)</label>
-            <textarea id="weaponsInput"></textarea>
-          </div>
-          <div>
-            <label for="roomsInput">Rooms / locations (one per line)</label>
-            <textarea id="roomsInput"></textarea>
-          </div>
-          <div class="share-box">
-            <label for="shareLink">Game link</label>
-            <div class="share-row">
-              <input id="shareLink" readonly placeholder="Click Start Game first" />
-              <button id="copyLinkBtn">Copy</button>
-            </div>
-            <div class="tiny" id="shareHint">Everyone opens the same game link.</div>
-          </div>
-        </div>
-      </section>
+<div class="panel" id="hostPanel">
+<h2>Host Panel</h2>
+<div id="codes"></div>
 
-      <section class="panel">
-        <div id="hostView">
-          <h2>Host setup</h2>
-          <div class="tiny" style="margin-bottom:10px;">After you start the game, this area will show the player codes. Give each person only their own code.</div>
-          <div class="host-grid">
-            <div class="code-box">
-              <h3>Player codes</h3>
-              <div id="codeList" class="code-list"></div>
-            </div>
-            <div class="hand-box">
-              <h3>Case file</h3>
-              <div class="tiny">This is only visible on the device that started the game.</div>
-              <div id="caseFilePreview" style="margin-top:10px;font-weight:700;"></div>
-            </div>
-          </div>
-        </div>
+<h3>Accusation Checker</h3>
+<select id="accSus"></select>
+<select id="accWeap"></select>
+<select id="accRoom"></select>
+<button id="check">Check</button>
+<div id="result"></div>
 
-        <div id="joinView">
-          <div class="sheet-top">
-            <div>
-              <div class="sheet-title" id="boardTitle">Detective Notes</div>
-              <div class="sheet-subtitle" id="playerHeader">Enter your code to load your hand</div>
-            </div>
-          </div>
+<h3>End Game</h3>
+<button id="revealBtn">Reveal Solution</button>
+<div id="solution" class="hidden"></div>
+</div>
 
-          <div class="join-row" style="margin-bottom:12px;">
-            <input id="playerCodeInput" placeholder="Enter your 4-digit code" maxlength="4" />
-            <button id="joinBtn">Open My Hand</button>
-          </div>
+<div class="panel">
+<h2>Join Game</h2>
+<input id="codeInput" placeholder="Enter code">
+<button id="join">Join</button>
+<div id="hand"></div>
+</div>
+</div>
 
-          <div id="myHandBox" class="hand-box hidden" style="margin-bottom:12px;"></div>
+<script>
+function parse(t){return t.split('\n').map(x=>x.trim()).filter(Boolean)}
+function shuffle(a){return a.sort(()=>Math.random()-0.5)}
+function encode(o){return btoa(JSON.stringify(o))}
+function decode(s){return JSON.parse(atob(s))}
 
-          <div class="scroll-x">
-            <table>
-              <thead id="sheetHead"></thead>
-              <tbody id="sheetBody"></tbody>
-            </table>
-          </div>
+let game=null
 
-          <div class="summary">
-            <div class="stat"><strong id="checkCount">0</strong><span class="tiny">Checks</span></div>
-            <div class="stat"><strong id="xCount">0</strong><span class="tiny">X marks</span></div>
-            <div class="stat"><strong id="dotCount">0</strong><span class="tiny">Dots</span></div>
-            <div class="stat"><strong id="rowCount">0</strong><span class="tiny">Cards</span></div>
-          </div>
+function buildGame(t){
+const s=shuffle([...t.suspects])
+const w=shuffle([...t.weapons])
+const r=shuffle([...t.rooms])
+const solution={suspect:s[0],weapon:w[0],room:r[0]}
 
-          <div class="bottom-grid">
-            <div class="accusation-box">
-              <h3>Final accusation</h3>
-              <div class="builder-grid">
-                <input id="solutionSuspect" placeholder="Suspect" />
-                <input id="solutionWeapon" placeholder="Weapon" />
-                <input id="solutionRoom" placeholder="Room" />
-              </div>
-            </div>
-            <div class="notes-box">
-              <h3>Detective notes</h3>
-              <textarea id="generalNotes" placeholder="Turn-by-turn notes, reveals, guesses, and logic..."></textarea>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
-  </div>
+const deck=shuffle([
+...s.slice(1).map(x=>({cat:'suspects',name:x})),
+...w.slice(1).map(x=>({cat:'weapons',name:x})),
+...r.slice(1).map(x=>({cat:'rooms',name:x}))
+])
 
-  <script>
-    const CLASSIC_TEMPLATE = {
-      boardName: 'Classic Clue',
-      players: ['P1', 'P2', 'P3', 'P4'],
-      suspects: ['Miss Scarlet', 'Colonel Mustard', 'Mrs. White', 'Mr. Green', 'Mrs. Peacock', 'Professor Plum'],
-      weapons: ['Candlestick', 'Knife', 'Lead Pipe', 'Revolver', 'Rope', 'Wrench'],
-      rooms: ['Kitchen', 'Ballroom', 'Conservatory', 'Dining Room', 'Billiard Room', 'Library', 'Lounge', 'Hall', 'Study']
-    };
+const players=t.players.map(p=>({name:p,hand:[],code:Math.floor(1000+Math.random()*9000)}))
+deck.forEach((c,i)=>players[i%players.length].hand.push(c))
 
-    const MARKS = ['', '✓', '✕', '•'];
-    const LOCAL_NOTES_PREFIX = 'clue-notes-v1-';
+return {...t,players,solution}
+}
 
-    function parseLines(text) {
-      return text.split('\n').map(x => x.trim()).filter(Boolean);
-    }
+function fillDropdowns(){
+['accSus','accWeap','accRoom'].forEach(id=>{
+const el=document.getElementById(id)
+el.innerHTML=''
+})
 
-    function shuffle(array) {
-      const arr = [...array];
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-      return arr;
-    }
+game.suspects.forEach(x=>accSus.innerHTML+=`<option>${x}</option>`)
+game.weapons.forEach(x=>accWeap.innerHTML+=`<option>${x}</option>`)
+game.rooms.forEach(x=>accRoom.innerHTML+=`<option>${x}</option>`)
+}
 
-    function encodeData(obj) {
-      return btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
-    }
+start.onclick=()=>{
+const t={
+boardName:boardName.value,
+players:parse(players.value),
+suspects:parse(suspects.value),
+weapons:parse(weapons.value),
+rooms:parse(rooms.value)
+}
+if(t.players.length<2)return alert('Need players')
 
-    function decodeData(str) {
-      try {
-        return JSON.parse(decodeURIComponent(escape(atob(str))));
-      } catch {
-        return null;
-      }
-    }
+game=buildGame(t)
 
-    function gameFromUrl() {
-      const params = new URLSearchParams(window.location.search);
-      const encoded = params.get('game');
-      return encoded ? decodeData(encoded) : null;
-    }
+const url=location.origin+location.pathname+'?g='+encode(game)
+link.innerText=url
+history.replaceState(null,'','?g='+encode(game))
 
-    function randomCode(existing) {
-      let code;
-      do {
-        code = String(Math.floor(1000 + Math.random() * 9000));
-      } while (existing.has(code));
-      return code;
-    }
+codes.innerHTML=''
+game.players.forEach(p=>{
+codes.innerHTML+=`<div>${p.name}: <span class="code">${p.code}</span></div>`
+})
 
-    function buildGameData(template) {
-      const suspects = shuffle(template.suspects);
-      const weapons = shuffle(template.weapons);
-      const rooms = shuffle(template.rooms);
-      const caseFile = {
-        suspect: suspects[0],
-        weapon: weapons[0],
-        room: rooms[0]
-      };
+fillDropdowns()
+}
 
-      const deck = shuffle([
-        ...suspects.slice(1).map(name => ({ category: 'suspects', name })),
-        ...weapons.slice(1).map(name => ({ category: 'weapons', name })),
-        ...rooms.slice(1).map(name => ({ category: 'rooms', name }))
-      ]);
+check.onclick=()=>{
+if(!game)return
+const correct=
+accSus.value===game.solution.suspect &&
+accWeap.value===game.solution.weapon &&
+accRoom.value===game.solution.room
 
-      const players = template.players.map(name => ({ name, code: '', hand: [] }));
-      deck.forEach((card, index) => {
-        players[index % players.length].hand.push(card);
-      });
+result.innerText=correct?"Correct — mystery solved":"Incorrect"
+}
 
-      const used = new Set();
-      players.forEach(player => {
-        player.code = randomCode(used);
-        used.add(player.code);
-      });
+revealBtn.onclick=()=>{
+solution.classList.remove('hidden')
+solution.innerText=`Suspect: ${game.solution.suspect}, Weapon: ${game.solution.weapon}, Room: ${game.solution.room}`
+}
 
-      return {
-        boardName: template.boardName,
-        suspects: template.suspects,
-        weapons: template.weapons,
-        rooms: template.rooms,
-        players,
-        caseFile
-      };
-    }
+join.onclick=()=>{
+if(!game)return alert('Load game')
+const p=game.players.find(x=>String(x.code)===codeInput.value)
+if(!p)return alert('Invalid code')
+hand.innerText='Your cards: '+p.hand.map(c=>c.name).join(', ')
+}
 
-    function builderTemplate() {
-      return {
-        boardName: document.getElementById('boardName').value.trim() || 'Custom Clue',
-        players: parseLines(document.getElementById('playerNamesInput').value),
-        suspects: parseLines(document.getElementById('suspectsInput').value),
-        weapons: parseLines(document.getElementById('weaponsInput').value),
-        rooms: parseLines(document.getElementById('roomsInput').value)
-      };
-    }
-
-    function fillBuilder(template) {
-      document.getElementById('boardName').value = template.boardName || '';
-      document.getElementById('playerNamesInput').value = (template.players || []).join('\n');
-      document.getElementById('suspectsInput').value = (template.suspects || []).join('\n');
-      document.getElementById('weaponsInput').value = (template.weapons || []).join('\n');
-      document.getElementById('roomsInput').value = (template.rooms || []).join('\n');
-    }
-
-    let game = gameFromUrl();
-    let currentPlayer = null;
-    let noteState = null;
-
-    function blankNoteState(game, player) {
-      const playerCount = game.players.length;
-      const defaultCols = game.players.map(p => p.name);
-      const makeItems = (items) => items.map(name => ({ name, marks: Array(playerCount).fill('') }));
-      const state = {
-        boardName: game.boardName,
-        playerNames: defaultCols,
-        suspects: makeItems(game.suspects),
-        weapons: makeItems(game.weapons),
-        rooms: makeItems(game.rooms),
-        generalNotes: '',
-        solutionSuspect: '',
-        solutionWeapon: '',
-        solutionRoom: ''
-      };
-
-      player.hand.forEach(card => {
-        const row = state[card.category].find(x => x.name === card.name);
-        if (row) row.marks[0] = '✓';
-      });
-      return state;
-    }
-
-    function notesKey(game, player) {
-      return LOCAL_NOTES_PREFIX + encodeData({ board: game.boardName, player: player.name, code: player.code }).slice(0, 100);
-    }
-
-    function loadNotes(game, player) {
-      const key = notesKey(game, player);
-      try {
-        const raw = localStorage.getItem(key);
-        return raw ? JSON.parse(raw) : blankNoteState(game, player);
-      } catch {
-        return blankNoteState(game, player);
-      }
-    }
-
-    function saveNotes() {
-      if (!game || !currentPlayer || !noteState) return;
-      localStorage.setItem(notesKey(game, currentPlayer), JSON.stringify(noteState));
-      document.getElementById('saveStatus').textContent = 'Saved automatically on this device.';
-      updateSummary();
-    }
-
-    function fillHostArea() {
-      if (!game) return;
-      document.getElementById('boardTitle').textContent = game.boardName;
-      const codeList = document.getElementById('codeList');
-      codeList.innerHTML = '';
-      game.players.forEach(player => {
-        const row = document.createElement('div');
-        row.className = 'code-row';
-        row.innerHTML = `<span>${player.name}</span><span class="code-badge">${player.code}</span>`;
-        codeList.appendChild(row);
-      });
-      document.getElementById('caseFilePreview').innerHTML = `Suspect: ${game.caseFile.suspect}<br>Weapon: ${game.caseFile.weapon}<br>Room: ${game.caseFile.room}`;
-    }
-
-    function renderJoinHeader() {
-      const header = document.getElementById('playerHeader');
-      const handBox = document.getElementById('myHandBox');
-      if (!currentPlayer) {
-        header.textContent = 'Enter your code to load your hand';
-        handBox.classList.add('hidden');
-        return;
-      }
-      header.textContent = currentPlayer.name + ' — your notes sheet';
-      handBox.classList.remove('hidden');
-      handBox.innerHTML = `<h3>Your cards</h3><div>${currentPlayer.hand.map(card => card.name).join(', ') || 'No cards'}</div>`;
-    }
-
-    function cycleMark(section, rowIndex, colIndex) {
-      const current = noteState[section][rowIndex].marks[colIndex] || '';
-      const next = MARKS[(MARKS.indexOf(current) + 1) % MARKS.length];
-      noteState[section][rowIndex].marks[colIndex] = next;
-      saveNotes();
-      renderSheet();
-    }
-
-    function markClass(value) {
-      if (value === '✓') return 'state-check';
-      if (value === '✕') return 'state-x';
-      if (value === '•') return 'state-dot';
-      return '';
-    }
-
-    function renderSheet() {
-      const head = document.getElementById('sheetHead');
-      const body = document.getElementById('sheetBody');
-      head.innerHTML = '';
-      body.innerHTML = '';
-      if (!game || !noteState) return;
-
-      const headerRow = document.createElement('tr');
-      const first = document.createElement('th');
-      first.className = 'card-col';
-      first.textContent = 'Cards';
-      headerRow.appendChild(first);
-
-      noteState.playerNames.forEach(name => {
-        const th = document.createElement('th');
-        th.textContent = name;
-        headerRow.appendChild(th);
-      });
-      head.appendChild(headerRow);
-
-      const sections = [
-        ['suspects', 'Suspects', 'sec-suspects'],
-        ['weapons', 'Weapons', 'sec-weapons'],
-        ['rooms', 'Rooms', 'sec-rooms']
-      ];
-
-      sections.forEach(([key, label, className]) => {
-        const sectionRow = document.createElement('tr');
-        sectionRow.className = className;
-        const td = document.createElement('td');
-        td.colSpan = noteState.playerNames.length + 1;
-        td.className = 'section-cell';
-        td.textContent = label;
-        sectionRow.appendChild(td);
-        body.appendChild(sectionRow);
-
-        noteState[key].forEach((item, rowIndex) => {
-          const tr = document.createElement('tr');
-          const nameTd = document.createElement('td');
-          nameTd.className = 'card-col';
-          nameTd.textContent = item.name;
-          tr.appendChild(nameTd);
-
-          item.marks.forEach((mark, colIndex) => {
-            const td = document.createElement('td');
-            const btn = document.createElement('button');
-            btn.className = 'mark-btn ' + markClass(mark);
-            btn.textContent = mark;
-            btn.addEventListener('click', () => cycleMark(key, rowIndex, colIndex));
-            td.appendChild(btn);
-            tr.appendChild(td);
-          });
-          body.appendChild(tr);
-        });
-      });
-
-      document.getElementById('generalNotes').value = noteState.generalNotes;
-      document.getElementById('solutionSuspect').value = noteState.solutionSuspect;
-      document.getElementById('solutionWeapon').value = noteState.solutionWeapon;
-      document.getElementById('solutionRoom').value = noteState.solutionRoom;
-      updateSummary();
-    }
-
-    function updateSummary() {
-      if (!noteState) {
-        document.getElementById('checkCount').textContent = '0';
-        document.getElementById('xCount').textContent = '0';
-        document.getElementById('dotCount').textContent = '0';
-        document.getElementById('rowCount').textContent = '0';
-        return;
-      }
-      let checks = 0, xs = 0, dots = 0, rows = 0;
-      ['suspects','weapons','rooms'].forEach(section => {
-        rows += noteState[section].length;
-        noteState[section].forEach(item => {
-          item.marks.forEach(mark => {
-            if (mark === '✓') checks++;
-            else if (mark === '✕') xs++;
-            else if (mark === '•') dots++;
-          });
-        });
-      });
-      document.getElementById('checkCount').textContent = checks;
-      document.getElementById('xCount').textContent = xs;
-      document.getElementById('dotCount').textContent = dots;
-      document.getElementById('rowCount').textContent = rows;
-    }
-
-    function bindNoteInput(id, key) {
-      document.getElementById(id).addEventListener('input', (e) => {
-        if (!noteState) return;
-        noteState[key] = e.target.value;
-        saveNotes();
-      });
-    }
-
-    bindNoteInput('generalNotes', 'generalNotes');
-    bindNoteInput('solutionSuspect', 'solutionSuspect');
-    bindNoteInput('solutionWeapon', 'solutionWeapon');
-    bindNoteInput('solutionRoom', 'solutionRoom');
-
-    document.getElementById('startGameBtn').addEventListener('click', () => {
-      const template = builderTemplate();
-      if (template.players.length < 2) return alert('Add at least 2 player names.');
-      if (!template.suspects.length || !template.weapons.length || !template.rooms.length) return alert('Add suspects, weapons, and rooms first.');
-      game = buildGameData(template);
-      const link = window.location.origin + window.location.pathname + '?game=' + encodeURIComponent(encodeData(game));
-      document.getElementById('shareLink').value = link;
-      history.replaceState(null, '', '?game=' + encodeURIComponent(encodeData(game)));
-      fillHostArea();
-      currentPlayer = null;
-      noteState = null;
-      renderJoinHeader();
-      renderSheet();
-    });
-
-    document.getElementById('copyLinkBtn').addEventListener('click', async () => {
-      const link = document.getElementById('shareLink').value.trim();
-      if (!link) return alert('Start a game first.');
-      try {
-        await navigator.clipboard.writeText(link);
-        document.getElementById('shareHint').textContent = 'Copied.';
-      } catch {
-        document.getElementById('shareHint').textContent = 'Copy failed. Copy it manually.';
-      }
-    });
-
-    document.getElementById('copyGameLinkBtn').addEventListener('click', () => {
-      document.getElementById('copyLinkBtn').click();
-    });
-
-    document.getElementById('joinBtn').addEventListener('click', () => {
-      if (!game) return alert('Open a game link first or start a game.');
-      const code = document.getElementById('playerCodeInput').value.trim();
-      const player = game.players.find(p => p.code === code);
-      if (!player) return alert('Code not found.');
-      currentPlayer = player;
-      noteState = loadNotes(game, player);
-      renderJoinHeader();
-      renderSheet();
-    });
-
-    document.getElementById('useClassicBtn').addEventListener('click', () => {
-      fillBuilder(CLASSIC_TEMPLATE);
-    });
-
-    document.getElementById('exportBtn').addEventListener('click', () => {
-      if (!game || !currentPlayer || !noteState) return alert('Open your hand first.');
-      const exportData = { game, playerCode: currentPlayer.code, noteState };
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'detective-notes.json';
-      a.click();
-      URL.revokeObjectURL(url);
-    });
-
-    document.getElementById('importBtn').addEventListener('click', () => {
-      document.getElementById('importFile').click();
-    });
-
-    document.getElementById('importFile').addEventListener('change', async (e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      try {
-        const imported = JSON.parse(await file.text());
-        if (imported.game) {
-          game = imported.game;
-          const link = window.location.origin + window.location.pathname + '?game=' + encodeURIComponent(encodeData(game));
-          document.getElementById('shareLink').value = link;
-          history.replaceState(null, '', '?game=' + encodeURIComponent(encodeData(game)));
-          fillBuilder({ boardName: game.boardName, players: game.players.map(p => p.name), suspects: game.suspects, weapons: game.weapons, rooms: game.rooms });
-          fillHostArea();
-        }
-        const player = game.players.find(p => p.code === imported.playerCode);
-        if (player && imported.noteState) {
-          currentPlayer = player;
-          noteState = imported.noteState;
-          saveNotes();
-          renderJoinHeader();
-          renderSheet();
-        }
-      } catch {
-        alert('That file could not be imported.');
-      }
-      e.target.value = '';
-    });
-
-    fillBuilder(CLASSIC_TEMPLATE);
-    if (game) {
-      fillBuilder({ boardName: game.boardName, players: game.players.map(p => p.name), suspects: game.suspects, weapons: game.weapons, rooms: game.rooms });
-      document.getElementById('shareLink').value = window.location.href;
-      fillHostArea();
-    }
-    renderJoinHeader();
-    renderSheet();
-  </script>
+const params=new URLSearchParams(location.search)
+if(params.get('g')){
+game=decode(params.get('g'))
+fillDropdowns()
+}
+</script>
 </body>
 </html>
