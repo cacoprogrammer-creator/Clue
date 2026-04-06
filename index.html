@@ -312,30 +312,50 @@
   </div>
 
   <div class="grid">
-    <div class="panel">
-      <h3>Build Game</h3>
-      <label for="boardName">Game name</label>
-      <input id="boardName" placeholder="Mystery Night"><br><br>
+    <div>
+      <div class="panel">
+        <h3>Multiplayer Room</h3>
 
-      <label for="players">Players (one per line)</label>
-      <textarea id="players" placeholder="Alex&#10;Sam"></textarea><br>
+        <button id="createRoomBtn">Create Room</button>
 
-      <label for="sus">Suspects / characters (one per line)</label>
-      <textarea id="sus" placeholder="Miss Scarlet&#10;Colonel Mustard&#10;Professor Plum"></textarea><br>
-
-      <label for="weap">Weapons / items (one per line)</label>
-      <textarea id="weap" placeholder="Knife&#10;Rope&#10;Candlestick"></textarea><br>
-
-      <label for="rooms">Rooms / locations (one per line)</label>
-      <textarea id="rooms" placeholder="Kitchen&#10;Library&#10;Ballroom"></textarea><br>
-
-      <div class="callout">
-        <label for="link">Game link</label>
         <div class="join-row">
-          <input id="link" readonly placeholder="Start a game first">
-          <button id="copyLinkBtn">Copy</button>
+          <input id="roomCodeInput" placeholder="Enter room code">
+          <button id="joinRoomBtn">Join Room</button>
         </div>
-        <div class="small">Everyone opens the same link, then enters only their own code.</div>
+
+        <div class="small">Room Code: <span id="roomCodeDisplay">None</span></div>
+
+        <div class="callout">
+          <strong>Players in Room:</strong>
+          <div id="playerList" class="small"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Build Game</h3>
+        <label for="boardName">Game name</label>
+        <input id="boardName" placeholder="Mystery Night"><br><br>
+
+        <label for="players">Players (one per line)</label>
+        <textarea id="players" placeholder="Alex&#10;Sam"></textarea><br>
+
+        <label for="sus">Suspects / characters (one per line)</label>
+        <textarea id="sus" placeholder="Miss Scarlet&#10;Colonel Mustard&#10;Professor Plum"></textarea><br>
+
+        <label for="weap">Weapons / items (one per line)</label>
+        <textarea id="weap" placeholder="Knife&#10;Rope&#10;Candlestick"></textarea><br>
+
+        <label for="rooms">Rooms / locations (one per line)</label>
+        <textarea id="rooms" placeholder="Kitchen&#10;Library&#10;Ballroom"></textarea><br>
+
+        <div class="callout">
+          <label for="link">Game link</label>
+          <div class="join-row">
+            <input id="link" readonly placeholder="Start a game first">
+            <button id="copyLinkBtn">Copy</button>
+          </div>
+          <div class="small">Everyone opens the same link, then enters only their own code.</div>
+        </div>
       </div>
     </div>
 
@@ -400,6 +420,8 @@
     getAuth,
     GoogleAuthProvider,
     signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult,
     onAuthStateChanged,
     signOut
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -409,7 +431,6 @@
     set,
     get,
     update,
-    push,
     onValue
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -427,15 +448,20 @@
   const db = getDatabase(app);
 
   let currentUser = null;
+  let roomListenerAttached = false;
+  let currentRoom = null;
 
   const signInBtn = document.getElementById('signInBtn');
   const signOutBtn = document.getElementById('signOutBtn');
   const authStatus = document.getElementById('authStatus');
+  const roomCodeInput = document.getElementById('roomCodeInput');
+  const roomCodeDisplay = document.getElementById('roomCodeDisplay');
+  const playerList = document.getElementById('playerList');
 
   signInBtn.addEventListener('click', async () => {
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      await signInWithRedirect(auth, provider);
     } catch (error) {
       console.error(error);
       authStatus.textContent = 'Sign-in failed';
@@ -448,6 +474,11 @@
     } catch (error) {
       console.error(error);
     }
+  });
+
+  getRedirectResult(auth).catch((error) => {
+    console.error(error);
+    authStatus.textContent = 'Sign-in failed';
   });
 
   onAuthStateChanged(auth, (user) => {
@@ -489,6 +520,10 @@
     return code;
   }
 
+  function generateRoomCode(){
+    return Math.random().toString(36).substring(2, 7).toUpperCase();
+  }
+
   const MARKS = ['', '✓', 'X', '•'];
 
   let game = null;
@@ -518,6 +553,83 @@
   function setStatus(text){
     statusText.textContent = text;
   }
+
+  function listenToRoom(roomCode){
+    const roomRef = ref(db, "games/" + roomCode);
+
+    onValue(roomRef, (snapshot) => {
+      const data = snapshot.val();
+      if(!data) return;
+
+      const players = data.players || {};
+      playerList.innerHTML = "";
+
+      Object.values(players).forEach(p => {
+        const div = document.createElement("div");
+        div.textContent = p.name;
+        playerList.appendChild(div);
+      });
+
+      roomCodeDisplay.textContent = roomCode;
+    });
+  }
+
+  document.getElementById("createRoomBtn").addEventListener("click", async () => {
+    if(!currentUser){
+      alert("Sign in first");
+      return;
+    }
+
+    const roomCode = generateRoomCode();
+
+    await set(ref(db, "games/" + roomCode), {
+      gameName: boardNameEl.value.trim() || "Clue Game",
+      host: currentUser.uid,
+      status: "lobby",
+      players: {
+        [currentUser.uid]: {
+          name: currentUser.displayName || currentUser.email || "Host"
+        }
+      }
+    });
+
+    currentRoom = roomCode;
+    roomCodeDisplay.textContent = roomCode;
+    listenToRoom(roomCode);
+    setStatus("Room created.");
+  });
+
+  document.getElementById("joinRoomBtn").addEventListener("click", async () => {
+    if(!currentUser){
+      alert("Sign in first");
+      return;
+    }
+
+    const code = roomCodeInput.value.trim().toUpperCase();
+    if(!code){
+      alert("Enter a room code");
+      return;
+    }
+
+    const roomRef = ref(db, "games/" + code);
+    const snap = await get(roomRef);
+
+    if(!snap.exists()){
+      alert("Room not found");
+      return;
+    }
+
+    await update(ref(db, "games/" + code + "/players"), {
+      [currentUser.uid]: {
+        name: currentUser.displayName || currentUser.email || "Player"
+      }
+    });
+
+    currentRoom = code;
+    roomCodeDisplay.textContent = code;
+    listenToRoom(code);
+    setStatus("Joined room.");
+  });
 
   function buildGame(template){
     const s = sh(template.sus);
