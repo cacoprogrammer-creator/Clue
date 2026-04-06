@@ -422,7 +422,9 @@
     signInWithRedirect,
     getRedirectResult,
     onAuthStateChanged,
-    signOut
+    signOut,
+    setPersistence,
+    browserLocalPersistence
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import {
     getDatabase,
@@ -444,9 +446,9 @@
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  import { setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  await setPersistence(auth, browserLocalPersistence);
   const db = getDatabase(app);
+
+  await setPersistence(auth, browserLocalPersistence);
 
   let currentUser = null;
   let currentRoom = null;
@@ -458,6 +460,9 @@
   const signInBtn = document.getElementById('signInBtn');
   const signOutBtn = document.getElementById('signOutBtn');
   const authStatus = document.getElementById('authStatus');
+  const roomCodeInput = document.getElementById('roomCodeInput');
+  const roomCodeDisplay = document.getElementById('roomCodeDisplay');
+  const playerList = document.getElementById('playerList');
 
   const boardNameEl = document.getElementById('boardName');
   const playersEl = document.getElementById('players');
@@ -477,9 +482,6 @@
   const a3 = document.getElementById('a3');
   const res = document.getElementById('res');
   const sol = document.getElementById('sol');
-  const roomCodeInput = document.getElementById('roomCodeInput');
-  const roomCodeDisplay = document.getElementById('roomCodeDisplay');
-  const playerList = document.getElementById('playerList');
 
   function setStatus(text){
     statusText.textContent = text;
@@ -506,29 +508,26 @@
     }
   });
 
-  getRedirectResult(auth)
-    .then((result) => {
-      if (result?.user) {
-        authStatus.textContent = `Signed in as ${result.user.displayName || result.user.email || "user"}`;
-      }
-    })
-    .catch((error) => {
-      console.error("getRedirectResult error:", error);
-      authStatus.textContent = `Redirect failed: ${error.code || error.message}`;
-    });
-  
-  
-  onAuthStateChanged(auth, (user) => {
-  setTimeout(() => {
-    currentUser = user || null;
-
-    if (user) {
-      authStatus.textContent = `Signed in as ${user.displayName || user.email || "user"}`;
-    } else {
-      authStatus.textContent = "Not signed in";
+  try {
+    const result = await getRedirectResult(auth);
+    if (result?.user) {
+      authStatus.textContent = `Signed in as ${result.user.displayName || result.user.email || "user"}`;
     }
-  }, 200);
-});
+  } catch (error) {
+    console.error("getRedirectResult error:", error);
+    authStatus.textContent = `Redirect failed: ${error.code || error.message}`;
+  }
+
+  onAuthStateChanged(auth, (user) => {
+    setTimeout(() => {
+      currentUser = user || null;
+      if (user) {
+        authStatus.textContent = `Signed in as ${user.displayName || user.email || "user"}`;
+      } else {
+        authStatus.textContent = "Not signed in";
+      }
+    }, 200);
+  });
 
   function p(x){
     return x.split('\n').map(a => a.trim()).filter(Boolean);
@@ -568,6 +567,7 @@
 
   function listenToRoom(roomCode){
     const roomRef = ref(db, "games/" + roomCode);
+
     onValue(roomRef, (snapshot) => {
       const data = snapshot.val();
       if(!data) return;
