@@ -293,7 +293,7 @@
   <div class="panel">
     <h1>Clue Dealer + Detective Notes</h1>
     <div class="small">
-      Multiplayer room + room game dealing + private hands.
+      Build a custom game, auto-deal cards, give each player a private code, use the host-only accusation checker, and keep the classic-style detective sheet.
     </div>
 
     <div class="auth-row">
@@ -303,9 +303,9 @@
     </div>
 
     <div>
-      <button class="primary" id="startBtn">Local Start Game</button>
+      <button class="primary" id="startBtn">Start Game</button>
       <button id="loadClassicBtn">Load Classic Clue</button>
-      <button id="copyGameLinkBtn">Copy Local Game Link</button>
+      <button id="copyGameLinkBtn">Copy Game Link</button>
     </div>
 
     <div class="status" id="statusText">Ready.</div>
@@ -317,8 +317,6 @@
         <h3>Multiplayer Room</h3>
 
         <button id="createRoomBtn">Create Room</button>
-        <button id="startRoomGameBtn">Start Room Game</button>
-        <button id="loadMyRoomHandBtn">Load My Room Hand</button>
 
         <div class="join-row">
           <input id="roomCodeInput" placeholder="Enter room code">
@@ -326,7 +324,6 @@
         </div>
 
         <div class="small">Room Code: <span id="roomCodeDisplay">None</span></div>
-        <div class="small">Room Status: <span id="roomStatusDisplay">No room</span></div>
 
         <div class="callout">
           <strong>Players in Room:</strong>
@@ -339,7 +336,7 @@
         <label for="boardName">Game name</label>
         <input id="boardName" placeholder="Mystery Night"><br><br>
 
-        <label for="players">Players (one per line) — local mode only</label>
+        <label for="players">Players (one per line)</label>
         <textarea id="players" placeholder="Alex&#10;Sam"></textarea><br>
 
         <label for="sus">Suspects / characters (one per line)</label>
@@ -352,12 +349,12 @@
         <textarea id="rooms" placeholder="Kitchen&#10;Library&#10;Ballroom"></textarea><br>
 
         <div class="callout">
-          <label for="link">Local game link</label>
+          <label for="link">Game link</label>
           <div class="join-row">
-            <input id="link" readonly placeholder="Start a local game first">
+            <input id="link" readonly placeholder="Start a game first">
             <button id="copyLinkBtn">Copy</button>
           </div>
-          <div class="small">This is the old local mode. Room mode is now above.</div>
+          <div class="small">Everyone opens the same link, then enters only their own code.</div>
         </div>
       </div>
     </div>
@@ -372,13 +369,13 @@
             <input id="hostPinInput" placeholder="Enter host PIN">
             <button id="unlockHostBtn">Unlock</button>
           </div>
-          <div class="small">Local mode only.</div>
+          <div class="small">The host PIN is generated when the game starts.</div>
         </div>
 
         <div id="hostUnlocked" class="hidden">
           <div class="callout">
             <div><strong>Host PIN:</strong> <span id="hostPinDisplay"></span></div>
-            <div class="small">Local mode only.</div>
+            <div class="small">Give players only their player code, not the host PIN.</div>
           </div>
 
           <div class="host-grid">
@@ -406,10 +403,10 @@
       </div>
 
       <div class="panel">
-        <h3>Player Area</h3>
+        <h3>Join</h3>
         <div class="join-row">
-          <input id="code" placeholder="Enter local code">
-          <button id="joinBtn">Join Local Game</button>
+          <input id="code" placeholder="Enter your code">
+          <button id="joinBtn">Join</button>
         </div>
         <div id="playerArea"></div>
       </div>
@@ -422,6 +419,7 @@
   import {
     getAuth,
     GoogleAuthProvider,
+    signInWithPopup,
     signInWithRedirect,
     getRedirectResult,
     onAuthStateChanged,
@@ -451,12 +449,8 @@
   const auth = getAuth(app);
   const db = getDatabase(app);
 
-  await setPersistence(auth, browserLocalPersistence);
-
   let currentUser = null;
   let currentRoom = null;
-  let roomData = null;
-
   let game = null;
   let player = null;
   let noteState = null;
@@ -465,18 +459,15 @@
   const signInBtn = document.getElementById('signInBtn');
   const signOutBtn = document.getElementById('signOutBtn');
   const authStatus = document.getElementById('authStatus');
+  const roomCodeInput = document.getElementById('roomCodeInput');
+  const roomCodeDisplay = document.getElementById('roomCodeDisplay');
+  const playerList = document.getElementById('playerList');
 
   const boardNameEl = document.getElementById('boardName');
   const playersEl = document.getElementById('players');
   const susEl = document.getElementById('sus');
   const weapEl = document.getElementById('weap');
   const roomsEl = document.getElementById('rooms');
-
-  const roomCodeInput = document.getElementById('roomCodeInput');
-  const roomCodeDisplay = document.getElementById('roomCodeDisplay');
-  const roomStatusDisplay = document.getElementById('roomStatusDisplay');
-  const playerList = document.getElementById('playerList');
-
   const linkEl = document.getElementById('link');
   const codesEl = document.getElementById('codes');
   const playerArea = document.getElementById('playerArea');
@@ -495,38 +486,64 @@
     statusText.textContent = text;
   }
 
-  signInBtn.addEventListener('click', async () => {
+  authStatus.textContent = "Checking sign-in...";
+
+  try {
+    await setPersistence(auth, browserLocalPersistence);
+  } catch (error) {
+    console.error("setPersistence error:", error);
+    authStatus.textContent = `Persistence failed: ${error.code || error.message}`;
+  }
+
+  async function handleGoogleSignIn() {
+    const provider = new GoogleAuthProvider();
+
     try {
-      authStatus.textContent = "Redirecting to Google...";
-      const provider = new GoogleAuthProvider();
-      await signInWithRedirect(auth, provider);
+      authStatus.textContent = "Opening Google sign-in...";
+      await signInWithPopup(auth, provider);
     } catch (error) {
-      console.error(error);
-      authStatus.textContent = `Sign-in failed: ${error.code || error.message}`;
+      console.error("signInWithPopup error:", error);
+
+      // Fallback to redirect if popup is blocked or fails
+      try {
+        authStatus.textContent = "Popup failed, redirecting to Google...";
+        await signInWithRedirect(auth, provider);
+      } catch (redirectError) {
+        console.error("signInWithRedirect fallback error:", redirectError);
+        authStatus.textContent = `Sign-in failed: ${redirectError.code || redirectError.message}`;
+      }
     }
-  });
+  }
+
+  signInBtn.addEventListener('click', handleGoogleSignIn);
 
   signOutBtn.addEventListener('click', async () => {
     try {
       await signOut(auth);
+      authStatus.textContent = "Not signed in";
     } catch (error) {
-      console.error(error);
+      console.error("signOut error:", error);
       authStatus.textContent = `Sign-out failed: ${error.code || error.message}`;
     }
   });
 
   try {
-    await getRedirectResult(auth);
+    const result = await getRedirectResult(auth);
+    if (result?.user) {
+      authStatus.textContent = `Signed in as ${result.user.displayName || result.user.email || "user"}`;
+    }
   } catch (error) {
-    console.error(error);
+    console.error("getRedirectResult error:", error);
     authStatus.textContent = `Redirect failed: ${error.code || error.message}`;
   }
 
   onAuthStateChanged(auth, (user) => {
     currentUser = user || null;
-    authStatus.textContent = user
-      ? `Signed in as ${user.displayName || user.email || "user"}`
-      : "Not signed in";
+    if (user) {
+      authStatus.textContent = `Signed in as ${user.displayName || user.email || "user"}`;
+    } else {
+      authStatus.textContent = "Not signed in";
+    }
   });
 
   function p(x){
@@ -564,6 +581,83 @@
   }
 
   const MARKS = ['', '✓', 'X', '•'];
+
+  function listenToRoom(roomCode){
+    const roomRef = ref(db, "games/" + roomCode);
+
+    onValue(roomRef, (snapshot) => {
+      const data = snapshot.val();
+      if(!data) return;
+
+      const players = data.players || {};
+      playerList.innerHTML = "";
+
+      Object.values(players).forEach(p => {
+        const div = document.createElement("div");
+        div.textContent = p.name;
+        playerList.appendChild(div);
+      });
+
+      roomCodeDisplay.textContent = roomCode;
+    });
+  }
+
+  document.getElementById("createRoomBtn").addEventListener("click", async () => {
+    if(!currentUser){
+      alert("Sign in first");
+      return;
+    }
+
+    const roomCode = generateRoomCode();
+
+    await set(ref(db, "games/" + roomCode), {
+      gameName: boardNameEl.value.trim() || "Clue Game",
+      host: currentUser.uid,
+      status: "lobby",
+      players: {
+        [currentUser.uid]: {
+          name: currentUser.displayName || currentUser.email || "Host"
+        }
+      }
+    });
+
+    currentRoom = roomCode;
+    roomCodeDisplay.textContent = roomCode;
+    listenToRoom(roomCode);
+    setStatus("Room created.");
+  });
+
+  document.getElementById("joinRoomBtn").addEventListener("click", async () => {
+    if(!currentUser){
+      alert("Sign in first");
+      return;
+    }
+
+    const code = roomCodeInput.value.trim().toUpperCase();
+    if(!code){
+      alert("Enter a room code");
+      return;
+    }
+
+    const roomRef = ref(db, "games/" + code);
+    const snap = await get(roomRef);
+
+    if(!snap.exists()){
+      alert("Room not found");
+      return;
+    }
+
+    await update(ref(db, "games/" + code + "/players"), {
+      [currentUser.uid]: {
+        name: currentUser.displayName || currentUser.email || "Player"
+      }
+    });
+
+    currentRoom = code;
+    roomCodeDisplay.textContent = code;
+    listenToRoom(code);
+    setStatus("Joined room.");
+  });
 
   function buildGame(template){
     const s = sh(template.sus);
@@ -606,50 +700,6 @@
     };
   }
 
-  function buildRoomGame(playerMap, suspects, weapons, rooms, gameName){
-    const orderedPlayers = Object.entries(playerMap).map(([uid, info]) => ({
-      uid,
-      name: info.name
-    }));
-
-    const s = sh([...suspects]);
-    const w = sh([...weapons]);
-    const r = sh([...rooms]);
-
-    const solution = {
-      sus: s[0],
-      weap: w[0],
-      room: r[0]
-    };
-
-    const deck = sh([
-      ...s.slice(1).map(name => ({category:'sus', name})),
-      ...w.slice(1).map(name => ({category:'weap', name})),
-      ...r.slice(1).map(name => ({category:'rooms', name}))
-    ]);
-
-    const hands = {};
-    orderedPlayers.forEach(p => {
-      hands[p.uid] = [];
-    });
-
-    deck.forEach((card, i) => {
-      const uid = orderedPlayers[i % orderedPlayers.length].uid;
-      hands[uid].push(card);
-    });
-
-    return {
-      name: gameName || 'Room Clue Game',
-      sus: suspects,
-      weap: weapons,
-      rooms: rooms,
-      playerOrder: orderedPlayers,
-      solution,
-      hands,
-      startedAt: Date.now()
-    };
-  }
-
   function fillAcc(){
     if(!game) return;
     a1.innerHTML = '';
@@ -675,34 +725,21 @@
   }
 
   function notesKey(){
-    if (player?.uid) {
-      return 'clue-room-notes-' + enc({room: currentRoom, uid: player.uid}).slice(0, 120);
-    }
     return 'clue-notes-' + enc({game: game.name, player: player.code}).slice(0, 100);
   }
 
   function blankNotesForPlayer(){
     if(!game || !player) return null;
 
-    let otherPlayers = [];
-
-    if (player.uid && game.playerOrder) {
-      otherPlayers = game.playerOrder
-        .filter(p => p.uid !== player.uid)
-        .map(p => p.name);
-    } else {
-      otherPlayers = game.players
-        .filter(p => p.code !== player.code)
-        .map(p => p.name);
-    }
+    const otherPlayers = game.players
+      .filter(p => p.code !== player.code)
+      .map(p => p.name);
 
     const colLabels = ['ME', ...otherPlayers];
 
-    const playerHand = player.hand || [];
-
     const buildRows = (items, categoryKey) => items.map(name => {
       const marks = Array(colLabels.length).fill('');
-      if(playerHand.some(card => card.category === categoryKey && card.name === name)){
+      if(player.hand.some(card => card.category === categoryKey && card.name === name)){
         marks[0] = '✓';
       }
       return { name, marks };
@@ -766,7 +803,7 @@
       return;
     }
 
-    const handCardsHtml = (player.hand || []).length
+    const handCardsHtml = player.hand.length
       ? player.hand.map(card => {
           const label = card.category === 'sus' ? 'Suspect' : card.category === 'weap' ? 'Weapon' : 'Room';
           const cls = card.category === 'sus' ? 'sus' : card.category === 'weap' ? 'weap' : 'room';
@@ -820,211 +857,6 @@
     });
   }
 
-  function renderRoomLobby(data, roomCode){
-    roomData = data;
-    const players = data.players || {};
-    playerList.innerHTML = '';
-
-    Object.values(players).forEach(p => {
-      const div = document.createElement('div');
-      div.textContent = p.name;
-      playerList.appendChild(div);
-    });
-
-    roomCodeDisplay.textContent = roomCode;
-    roomStatusDisplay.textContent = data.status || 'lobby';
-  }
-
-  function listenToRoom(roomCode){
-    const roomRef = ref(db, "games/" + roomCode);
-
-    onValue(roomRef, (snapshot) => {
-      const data = snapshot.val();
-      if(!data) return;
-      renderRoomLobby(data, roomCode);
-    });
-  }
-
-  async function loadMyRoomHand(){
-    if (!currentUser) {
-      alert("Sign in first");
-      return;
-    }
-    if (!currentRoom) {
-      alert("Join a room first");
-      return;
-    }
-
-    const snap = await get(ref(db, "games/" + currentRoom + "/gameState"));
-    if (!snap.exists()) {
-      alert("Room game has not started yet");
-      return;
-    }
-
-    const roomGame = snap.val();
-    const myHand = roomGame.hands?.[currentUser.uid];
-
-    if (!myHand) {
-      alert("No hand found for you in this room");
-      return;
-    }
-
-    const me = roomGame.playerOrder.find(p => p.uid === currentUser.uid);
-    if (!me) {
-      alert("Player record not found");
-      return;
-    }
-
-    game = roomGame;
-    player = {
-      uid: currentUser.uid,
-      name: me.name,
-      hand: myHand
-    };
-    noteState = null;
-    loadNotes();
-    renderPlayer();
-    setStatus("Loaded your room hand.");
-  }
-
-  document.getElementById("createRoomBtn").addEventListener("click", async () => {
-    if(!currentUser){
-      alert("Sign in first");
-      return;
-    }
-
-    const roomCode = generateRoomCode();
-
-    await set(ref(db, "games/" + roomCode), {
-      gameName: boardNameEl.value.trim() || "Clue Game",
-      host: currentUser.uid,
-      status: "lobby",
-      players: {
-        [currentUser.uid]: {
-          name: currentUser.displayName || currentUser.email || "Host"
-        }
-      }
-    });
-
-    currentRoom = roomCode;
-    listenToRoom(roomCode);
-    setStatus("Room created.");
-  });
-
-  document.getElementById("joinRoomBtn").addEventListener("click", async () => {
-    if(!currentUser){
-      alert("Sign in first");
-      return;
-    }
-
-    const code = roomCodeInput.value.trim().toUpperCase();
-    if(!code){
-      alert("Enter a room code");
-      return;
-    }
-
-    const roomRef = ref(db, "games/" + code);
-    const snap = await get(roomRef);
-
-    if(!snap.exists()){
-      alert("Room not found");
-      return;
-    }
-
-    await update(ref(db, "games/" + code + "/players"), {
-      [currentUser.uid]: {
-        name: currentUser.displayName || currentUser.email || "Player"
-      }
-    });
-
-    currentRoom = code;
-    listenToRoom(code);
-    setStatus("Joined room.");
-  });
-
-  document.getElementById("startRoomGameBtn").addEventListener("click", async () => {
-    if (!currentUser) {
-      alert("Sign in first");
-      return;
-    }
-    if (!currentRoom) {
-      alert("Create or join a room first");
-      return;
-    }
-
-    const roomSnap = await get(ref(db, "games/" + currentRoom));
-    if (!roomSnap.exists()) {
-      alert("Room not found");
-      return;
-    }
-
-    const room = roomSnap.val();
-
-    if (room.host !== currentUser.uid) {
-      alert("Only the host can start the room game");
-      return;
-    }
-
-    const playerMap = room.players || {};
-    const playerCount = Object.keys(playerMap).length;
-
-    if (playerCount < 2) {
-      alert("Need at least 2 players in the room");
-      return;
-    }
-
-    const suspects = p(susEl.value);
-    const weapons = p(weapEl.value);
-    const rooms = p(roomsEl.value);
-
-    if (!suspects.length || !weapons.length || !rooms.length) {
-      alert("Add suspects, weapons, and rooms first");
-      return;
-    }
-
-    const roomGame = buildRoomGame(
-      playerMap,
-      suspects,
-      weapons,
-      rooms,
-      boardNameEl.value.trim() || room.gameName || 'Room Clue Game'
-    );
-
-    await update(ref(db, "games/" + currentRoom), {
-      status: "started",
-      gameState: roomGame
-    });
-
-    setStatus("Room game started.");
-  });
-
-  document.getElementById("loadMyRoomHandBtn").addEventListener("click", loadMyRoomHand);
-
-  // Local mode below
-  function fillAcc(){
-    if(!game || !game.sus) return;
-    a1.innerHTML = '';
-    a2.innerHTML = '';
-    a3.innerHTML = '';
-    game.sus.forEach(x => a1.innerHTML += `<option>${x}</option>`);
-    game.weap.forEach(x => a2.innerHTML += `<option>${x}</option>`);
-    game.rooms.forEach(x => a3.innerHTML += `<option>${x}</option>`);
-  }
-
-  function fillCodes(){
-    if(!game || !game.players) return;
-    codesEl.innerHTML = '';
-    game.players.forEach(p => {
-      codesEl.innerHTML += `<div class="code-row"><span>${p.name}</span><span class="code">${p.code}</span></div>`;
-    });
-    hostPinDisplay.textContent = game.hostPin;
-  }
-
-  function updateHostView(){
-    hostLockedEl.classList.toggle('hidden', hostUnlocked);
-    hostUnlockedEl.classList.toggle('hidden', !hostUnlocked);
-  }
-
   function startGame(){
     const template = {
       name: boardNameEl.value.trim(),
@@ -1062,12 +894,12 @@
     sol.textContent = '';
 
     renderPlayer();
-    setStatus('Local game created.');
+    setStatus('Game created.');
   }
 
   function unlockHost(){
     if(!game){
-      alert('Start a local game first.');
+      alert('Start or open a game first.');
       return;
     }
     if(hostPinInput.value.trim() !== String(game.hostPin)){
@@ -1079,7 +911,7 @@
   }
 
   function checkAcc(){
-    if(!game || !game.solution) return;
+    if(!game) return;
     const ok =
       a1.value === game.solution.sus &&
       a2.value === game.solution.weap &&
@@ -1090,14 +922,14 @@
   }
 
   function reveal(){
-    if(!game || !game.solution) return;
+    if(!game) return;
     sol.classList.remove('hidden');
     sol.textContent = `Suspect: ${game.solution.sus}, Weapon: ${game.solution.weap}, Room: ${game.solution.room}`;
   }
 
   function join(){
-    if(!game || !game.players){
-      alert('Open a local game link first or start a local game.');
+    if(!game){
+      alert('Open a game link first or start a game.');
       return;
     }
     const c = document.getElementById('code').value.trim();
@@ -1109,17 +941,17 @@
     player = found;
     loadNotes();
     renderPlayer();
-    setStatus(`Loaded ${player.name}'s local notes.`);
+    setStatus(`Loaded ${player.name}'s notes.`);
   }
 
   function copyLink(){
     const text = linkEl.value.trim();
     if(!text){
-      alert('Start a local game first');
+      alert('Start a game first');
       return;
     }
     navigator.clipboard.writeText(text).then(() => {
-      setStatus('Local game link copied.');
+      setStatus('Game link copied.');
     }).catch(() => {
       setStatus('Copy failed. Copy it manually.');
     });
@@ -1159,9 +991,9 @@
       weapEl.value = game.weap.join('\n');
       roomsEl.value = game.rooms.join('\n');
 
-      setStatus('Local game loaded from link.');
+      setStatus('Game loaded from link.');
     } catch(e){
-      setStatus('Could not load local game from link.');
+      setStatus('Could not load game from link.');
     }
   } else {
     hostUnlocked = false;
@@ -1172,3 +1004,4 @@
 </script>
 </body>
 </html>
+
