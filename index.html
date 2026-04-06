@@ -1,574 +1,866 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Clue Dealer + Detective Notes</title>
-<style>
-:root{
-  --paper:#fffaf0;
-  --paper-2:#f7eed9;
-  --ink:#2c241b;
-  --muted:#6b604f;
-  --line:#b9aa8d;
-  --sus:#d6b36f;
-  --weap:#c97c7c;
-  --room:#7fa17c;
-  --ok-bg:#e4f0e4;
-  --ok:#244d29;
-  --bad-bg:#f6e0e0;
-  --bad:#7a2323;
-  --maybe-bg:#efe8d8;
-  --maybe:#6d5d48;
-}
-*{box-sizing:border-box}
-body{font-family:Arial,Helvetica,sans-serif;background:#efe6d1;margin:0;padding:10px;color:#2c241b}
-.wrap{max-width:1400px;margin:0 auto}
-.panel{background:var(--paper);padding:12px;border:2px solid var(--line);margin-bottom:10px;border-radius:12px;box-shadow:0 8px 22px rgba(55,41,19,.08)}
-button{padding:8px 10px;margin:4px;border-radius:8px;border:1px solid #a89676;background:#fffdf8;cursor:pointer;font-weight:700}
-button:hover{background:#f7efdf}
-button.primary{background:#2f2419;color:#fffaf2;border-color:#2f2419}
-.hidden{display:none !important}
-textarea,input,select{width:100%;box-sizing:border-box;border:1px solid #b9aa8d;border-radius:8px;padding:8px;background:#fffdf8;color:#2c241b;font:inherit}
-textarea{min-height:86px;resize:vertical}
-.grid{display:grid;grid-template-columns:360px 1fr;gap:12px}
-.code{font-weight:bold;letter-spacing:.08em}
-.sheet-wrap{overflow-x:auto;margin-top:10px}
-.sheet-title{font-size:1.2rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
-.sheet-sub{font-size:.88rem;color:#6b604f;margin-bottom:10px}
-table{width:100%;border-collapse:collapse;background:#fffdf8;border:2px solid #b9aa8d}
-td,th{border:1px solid #ccbda1;text-align:center;padding:0}
-thead th{background:#efe4ca;padding:7px 4px;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;min-width:40px}
-.card{font-weight:700;text-align:left;padding:8px 10px;min-width:180px;background:#fff9eb;position:sticky;left:0;z-index:2}
-thead .card{z-index:3}
-.section td{text-align:left;padding:8px 10px;font-size:.8rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#21170f}
-.sec-sus td{background:#d6b36f}
-.sec-weap td{background:#c97c7c}
-.sec-room td{background:#7fa17c}
-.mark{width:100%;min-width:40px;height:34px;border:0;background:#fffdf8;font-weight:800;font-size:.95rem;cursor:pointer;color:#2c241b}
-.state-check{background:var(--ok-bg);color:var(--ok)}
-.state-x{background:var(--bad-bg);color:var(--bad)}
-.state-dot{background:var(--maybe-bg);color:var(--maybe)}
-.player-box,.notes-box,.acc-box,.callout{margin-top:10px;padding:10px;border:1px solid #b9aa8d;border-radius:10px;background:#f7eed9}
-.small{font-size:.88rem;color:#6b604f}
-.status{font-size:.92rem;color:#6b604f;margin-top:8px}
-.join-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
-.code-list{display:grid;gap:8px;margin-top:8px}
-.code-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fffdf8}
-.host-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.result{margin-top:8px;font-weight:800;min-height:1.2em}
-.result.ok{color:var(--ok)}
-.result.bad{color:var(--bad)}
-.my-cards-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:10px}
-.my-card{background:#fffdf8;border:2px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 3px 0 rgba(0,0,0,.05)}
-.my-card-head{padding:8px 10px;font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
-.my-card-head.sus{background:var(--sus)}
-.my-card-head.weap{background:var(--weap)}
-.my-card-head.room{background:var(--room)}
-.my-card-body{min-height:92px;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;font-size:1.08rem;font-weight:800;line-height:1.2}
-@media (max-width:900px){.grid,.host-grid{grid-template-columns:1fr}.card{min-width:150px}}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clue Dealer + Detective Notes</title>
+  <style>
+    :root{
+      --paper:#fffaf0;
+      --paper-2:#f7eed9;
+      --ink:#2c241b;
+      --muted:#6b604f;
+      --line:#b9aa8d;
+      --sus:#d6b36f;
+      --weap:#c97c7c;
+      --room:#7fa17c;
+      --ok-bg:#e4f0e4;
+      --ok:#244d29;
+      --bad-bg:#f6e0e0;
+      --bad:#7a2323;
+      --maybe-bg:#efe8d8;
+      --maybe:#6d5d48;
+    }
+
+    * { box-sizing:border-box; }
+
+    body{
+      font-family:Arial,Helvetica,sans-serif;
+      background:#efe6d1;
+      margin:0;
+      padding:10px;
+      color:#2c241b;
+    }
+
+    .wrap{ max-width:1400px; margin:0 auto; }
+
+    .panel{
+      background:var(--paper);
+      padding:12px;
+      border:2px solid var(--line);
+      margin-bottom:10px;
+      border-radius:12px;
+      box-shadow:0 8px 22px rgba(55,41,19,.08);
+    }
+
+    h1,h2,h3,h4{ margin:0 0 10px; }
+
+    button{
+      padding:8px 10px;
+      margin:4px;
+      border-radius:8px;
+      border:1px solid #a89676;
+      background:#fffdf8;
+      cursor:pointer;
+      font-weight:700;
+    }
+
+    button:hover{ background:#f7efdf; }
+
+    button.primary{
+      background:#2f2419;
+      color:#fffaf2;
+      border-color:#2f2419;
+    }
+
+    .hidden{ display:none !important; }
+
+    textarea,input,select{
+      width:100%;
+      box-sizing:border-box;
+      border:1px solid #b9aa8d;
+      border-radius:8px;
+      padding:8px;
+      background:#fffdf8;
+      color:#2c241b;
+      font:inherit;
+    }
+
+    textarea{
+      min-height:86px;
+      resize:vertical;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:360px 1fr;
+      gap:12px;
+    }
+
+    .code{
+      font-weight:bold;
+      letter-spacing:.08em;
+    }
+
+    .sheet-wrap{
+      overflow-x:auto;
+      margin-top:10px;
+    }
+
+    .sheet-title{
+      font-size:1.2rem;
+      font-weight:800;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      margin-bottom:4px;
+    }
+
+    .sheet-sub{
+      font-size:.88rem;
+      color:#6b604f;
+      margin-bottom:10px;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      background:#fffdf8;
+      border:2px solid #b9aa8d;
+    }
+
+    td,th{
+      border:1px solid #ccbda1;
+      text-align:center;
+      padding:0;
+    }
+
+    thead th{
+      background:#efe4ca;
+      padding:7px 4px;
+      font-size:.78rem;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      min-width:40px;
+    }
+
+    .card{
+      font-weight:700;
+      text-align:left;
+      padding:8px 10px;
+      min-width:180px;
+      background:#fff9eb;
+      position:sticky;
+      left:0;
+      z-index:2;
+    }
+
+    thead .card{ z-index:3; }
+
+    .section td{
+      text-align:left;
+      padding:8px 10px;
+      font-size:.8rem;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      color:#21170f;
+    }
+
+    .sec-sus td{ background:#d6b36f; }
+    .sec-weap td{ background:#c97c7c; }
+    .sec-room td{ background:#7fa17c; }
+
+    .mark{
+      width:100%;
+      min-width:40px;
+      height:34px;
+      border:0;
+      background:#fffdf8;
+      font-weight:800;
+      font-size:.95rem;
+      cursor:pointer;
+      color:#2c241b;
+    }
+
+    .state-check{ background:var(--ok-bg); color:var(--ok); }
+    .state-x{ background:var(--bad-bg); color:var(--bad); }
+    .state-dot{ background:var(--maybe-bg); color:var(--maybe); }
+
+    .player-box,.notes-box,.acc-box,.callout{
+      margin-top:10px;
+      padding:10px;
+      border:1px solid #b9aa8d;
+      border-radius:10px;
+      background:#f7eed9;
+    }
+
+    .small{
+      font-size:.88rem;
+      color:#6b604f;
+    }
+
+    .status{
+      font-size:.92rem;
+      color:#6b604f;
+      margin-top:8px;
+    }
+
+    .join-row{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:8px;
+      align-items:center;
+    }
+
+    .code-list{
+      display:grid;
+      gap:8px;
+      margin-top:8px;
+    }
+
+    .code-row{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:8px;
+      align-items:center;
+      padding:8px 10px;
+      border:1px solid var(--line);
+      border-radius:10px;
+      background:#fffdf8;
+    }
+
+    .host-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+
+    .result{
+      margin-top:8px;
+      font-weight:800;
+      min-height:1.2em;
+    }
+
+    .result.ok{ color:var(--ok); }
+    .result.bad{ color:var(--bad); }
+
+    .my-cards-list{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+      gap:12px;
+      margin-top:10px;
+    }
+
+    .my-card{
+      background:#fffdf8;
+      border:2px solid var(--line);
+      border-radius:14px;
+      overflow:hidden;
+      box-shadow:0 3px 0 rgba(0,0,0,.05);
+    }
+
+    .my-card-head{
+      padding:8px 10px;
+      font-size:.72rem;
+      font-weight:800;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
+    .my-card-head.sus{ background:var(--sus); }
+    .my-card-head.weap{ background:var(--weap); }
+    .my-card-head.room{ background:var(--room); }
+
+    .my-card-body{
+      min-height:92px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:14px;
+      font-size:1.08rem;
+      font-weight:800;
+      line-height:1.2;
+    }
+
+    .auth-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+      margin-top:10px;
+    }
+
+    @media (max-width:900px){
+      .grid,.host-grid{ grid-template-columns:1fr; }
+      .card{ min-width:150px; }
+    }
+  </style>
 </head>
 <body>
 <div class="wrap">
 
-<div class="panel">
-  <h1>Clue Dealer + Detective Notes</h1>
-  <div class="small">Build a custom game, auto-deal cards, give each player a private code, use the host-only accusation checker, and keep the classic-style detective sheet.</div>
-  <div>
-    <button class="primary" id="startBtn">Start Game</button>
-    <button id="loadClassicBtn">Load Classic Clue</button>
-    <button id="copyGameLinkBtn">Copy Game Link</button>
-  </div>
-  <div class="status" id="statusText">Ready.</div>
-</div>
-
-<div class="grid">
   <div class="panel">
-    <h3>Build Game</h3>
-    <label for="boardName">Game name</label>
-    <input id="boardName" placeholder="Mystery Night"><br><br>
-
-    <label for="players">Players (one per line)</label>
-    <textarea id="players" placeholder="Alex&#10;Sam"></textarea><br>
-
-    <label for="sus">Suspects / characters (one per line)</label>
-    <textarea id="sus" placeholder="Miss Scarlet&#10;Colonel Mustard&#10;Professor Plum"></textarea><br>
-
-    <label for="weap">Weapons / items (one per line)</label>
-    <textarea id="weap" placeholder="Knife&#10;Rope&#10;Candlestick"></textarea><br>
-
-    <label for="rooms">Rooms / locations (one per line)</label>
-    <textarea id="rooms" placeholder="Kitchen&#10;Library&#10;Ballroom"></textarea><br>
-
-    <div class="callout">
-      <label for="link">Game link</label>
-      <div class="join-row">
-        <input id="link" readonly placeholder="Start a game first">
-        <button id="copyLinkBtn">Copy</button>
-      </div>
-      <div class="small">Everyone opens the same link, then enters only their own code.</div>
+    <h1>Clue Dealer + Detective Notes</h1>
+    <div class="small">
+      Build a custom game, auto-deal cards, give each player a private code, use the host-only accusation checker, and keep the classic-style detective sheet.
     </div>
+
+    <div class="auth-row">
+      <button id="signInBtn">Sign in with Google</button>
+      <button id="signOutBtn">Sign out</button>
+      <div class="small" id="authStatus">Not signed in</div>
+    </div>
+
+    <div>
+      <button class="primary" id="startBtn">Start Game</button>
+      <button id="loadClassicBtn">Load Classic Clue</button>
+      <button id="copyGameLinkBtn">Copy Game Link</button>
+    </div>
+
+    <div class="status" id="statusText">Ready.</div>
   </div>
 
-  <div>
+  <div class="grid">
     <div class="panel">
-      <h3>Host Panel</h3>
+      <h3>Build Game</h3>
+      <label for="boardName">Game name</label>
+      <input id="boardName" placeholder="Mystery Night"><br><br>
 
-      <div id="hostLocked" class="callout">
-        <label for="hostPinInput">Host PIN</label>
+      <label for="players">Players (one per line)</label>
+      <textarea id="players" placeholder="Alex&#10;Sam"></textarea><br>
+
+      <label for="sus">Suspects / characters (one per line)</label>
+      <textarea id="sus" placeholder="Miss Scarlet&#10;Colonel Mustard&#10;Professor Plum"></textarea><br>
+
+      <label for="weap">Weapons / items (one per line)</label>
+      <textarea id="weap" placeholder="Knife&#10;Rope&#10;Candlestick"></textarea><br>
+
+      <label for="rooms">Rooms / locations (one per line)</label>
+      <textarea id="rooms" placeholder="Kitchen&#10;Library&#10;Ballroom"></textarea><br>
+
+      <div class="callout">
+        <label for="link">Game link</label>
         <div class="join-row">
-          <input id="hostPinInput" placeholder="Enter host PIN">
-          <button id="unlockHostBtn">Unlock</button>
+          <input id="link" readonly placeholder="Start a game first">
+          <button id="copyLinkBtn">Copy</button>
         </div>
-        <div class="small">The host PIN is generated when the game starts.</div>
+        <div class="small">Everyone opens the same link, then enters only their own code.</div>
       </div>
+    </div>
 
-      <div id="hostUnlocked" class="hidden">
-        <div class="callout">
-          <div><strong>Host PIN:</strong> <span id="hostPinDisplay"></span></div>
-          <div class="small">Give players only their player code, not the host PIN.</div>
+    <div>
+      <div class="panel">
+        <h3>Host Panel</h3>
+
+        <div id="hostLocked" class="callout">
+          <label for="hostPinInput">Host PIN</label>
+          <div class="join-row">
+            <input id="hostPinInput" placeholder="Enter host PIN">
+            <button id="unlockHostBtn">Unlock</button>
+          </div>
+          <div class="small">The host PIN is generated when the game starts.</div>
         </div>
 
-        <div class="host-grid">
+        <div id="hostUnlocked" class="hidden">
           <div class="callout">
-            <h4>Player Codes</h4>
-            <div id="codes" class="code-list"></div>
+            <div><strong>Host PIN:</strong> <span id="hostPinDisplay"></span></div>
+            <div class="small">Give players only their player code, not the host PIN.</div>
           </div>
 
-          <div class="callout">
-            <h4>Accusation Checker</h4>
-            <select id="a1"></select><br><br>
-            <select id="a2"></select><br><br>
-            <select id="a3"></select><br>
-            <button id="checkBtn">Check</button>
-            <div id="res" class="result"></div>
+          <div class="host-grid">
+            <div class="callout">
+              <h4>Player Codes</h4>
+              <div id="codes" class="code-list"></div>
+            </div>
 
-            <div class="acc-box">
-              <h4>End Game</h4>
-              <button id="revealBtn">Reveal Solution</button>
-              <div id="sol" class="hidden"></div>
+            <div class="callout">
+              <h4>Accusation Checker</h4>
+              <select id="a1"></select><br><br>
+              <select id="a2"></select><br><br>
+              <select id="a3"></select><br>
+              <button id="checkBtn">Check</button>
+              <div id="res" class="result"></div>
+
+              <div class="acc-box">
+                <h4>End Game</h4>
+                <button id="revealBtn">Reveal Solution</button>
+                <div id="sol" class="hidden"></div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="panel">
-      <h3>Join</h3>
-      <div class="join-row">
-        <input id="code" placeholder="Enter your code">
-        <button id="joinBtn">Join</button>
+      <div class="panel">
+        <h3>Join</h3>
+        <div class="join-row">
+          <input id="code" placeholder="Enter your code">
+          <button id="joinBtn">Join</button>
+        </div>
+        <div id="playerArea"></div>
       </div>
-      <div id="playerArea"></div>
     </div>
   </div>
 </div>
-</div>
 
-<script>
-function p(x){
-  return x.split('\n').map(a => a.trim()).filter(Boolean)
-}
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getAuth,
+    GoogleAuthProvider,
+    signInWithPopup,
+    onAuthStateChanged,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import {
+    getDatabase,
+    ref,
+    set,
+    get,
+    update,
+    push,
+    onValue
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-function sh(arr){
-  const copy = [...arr]
-  for(let i = copy.length - 1; i > 0; i--){
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[copy[i], copy[j]] = [copy[j], copy[i]]
-  }
-  return copy
-}
+  const firebaseConfig = {
+    apiKey: "AIzaSyCZgD2Vw1oNoZ7du9LrdmGzGK28vs8LfWo",
+    authDomain: "clueapp-2baf1.firebaseapp.com",
+    projectId: "clueapp-2baf1",
+    storageBucket: "clueapp-2baf1.firebasestorage.app",
+    messagingSenderId: "649837902573",
+    appId: "1:649837902573:web:f7bdff5777990635a5eae4"
+  };
 
-function enc(o){
-  return btoa(unescape(encodeURIComponent(JSON.stringify(o))))
-}
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
 
-function dec(s){
-  return JSON.parse(decodeURIComponent(escape(atob(s))))
-}
+  let currentUser = null;
 
-function makeCode(existing){
-  let code
-  do {
-    code = String(Math.floor(1000 + Math.random() * 9000))
-  } while(existing.has(code))
-  existing.add(code)
-  return code
-}
+  const signInBtn = document.getElementById('signInBtn');
+  const signOutBtn = document.getElementById('signOutBtn');
+  const authStatus = document.getElementById('authStatus');
 
-const MARKS = ['', '✓', 'X', '•']
-
-let game = null
-let player = null
-let noteState = null
-let hostUnlocked = false
-
-const boardNameEl = document.getElementById('boardName')
-const playersEl = document.getElementById('players')
-const susEl = document.getElementById('sus')
-const weapEl = document.getElementById('weap')
-const roomsEl = document.getElementById('rooms')
-const linkEl = document.getElementById('link')
-const codesEl = document.getElementById('codes')
-const playerArea = document.getElementById('playerArea')
-const statusText = document.getElementById('statusText')
-const hostLockedEl = document.getElementById('hostLocked')
-const hostUnlockedEl = document.getElementById('hostUnlocked')
-const hostPinInput = document.getElementById('hostPinInput')
-const hostPinDisplay = document.getElementById('hostPinDisplay')
-const a1 = document.getElementById('a1')
-const a2 = document.getElementById('a2')
-const a3 = document.getElementById('a3')
-const res = document.getElementById('res')
-const sol = document.getElementById('sol')
-
-function setStatus(text){
-  statusText.textContent = text
-}
-
-function buildGame(template){
-  const s = sh(template.sus)
-  const w = sh(template.weap)
-  const r = sh(template.rooms)
-
-  const solution = {
-    sus: s[0],
-    weap: w[0],
-    room: r[0]
-  }
-
-  const deck = sh([
-    ...s.slice(1).map(x => ({category:'sus', name:x})),
-    ...w.slice(1).map(x => ({category:'weap', name:x})),
-    ...r.slice(1).map(x => ({category:'rooms', name:x}))
-  ])
-
-  const used = new Set()
-  const playersArr = template.players.map(n => ({
-    name:n,
-    hand:[],
-    code:makeCode(used)
-  }))
-
-  deck.forEach((card, i) => {
-    playersArr[i % playersArr.length].hand.push(card)
-  })
-
-  const hostPin = makeCode(used)
-
-  return {
-    name: template.name || 'Custom Clue',
-    players: playersArr,
-    sus: template.sus,
-    weap: template.weap,
-    rooms: template.rooms,
-    solution,
-    hostPin
-  }
-}
-
-function fillAcc(){
-  if(!game) return
-  a1.innerHTML = ''
-  a2.innerHTML = ''
-  a3.innerHTML = ''
-  game.sus.forEach(x => a1.innerHTML += `<option>${x}</option>`)
-  game.weap.forEach(x => a2.innerHTML += `<option>${x}</option>`)
-  game.rooms.forEach(x => a3.innerHTML += `<option>${x}</option>`)
-}
-
-function fillCodes(){
-  if(!game) return
-  codesEl.innerHTML = ''
-  game.players.forEach(p => {
-    codesEl.innerHTML += `<div class="code-row"><span>${p.name}</span><span class="code">${p.code}</span></div>`
-  })
-  hostPinDisplay.textContent = game.hostPin
-}
-
-function updateHostView(){
-  hostLockedEl.classList.toggle('hidden', hostUnlocked)
-  hostUnlockedEl.classList.toggle('hidden', !hostUnlocked)
-}
-
-function notesKey(){
-  return 'clue-notes-' + enc({game: game.name, player: player.code}).slice(0, 100)
-}
-
-function blankNotesForPlayer(){
-  if(!game || !player) return null
-
-  const otherPlayers = game.players
-    .filter(p => p.code !== player.code)
-    .map(p => p.name)
-
-  const colLabels = ['ME', ...otherPlayers]
-
-  const buildRows = (items, categoryKey) => items.map(name => {
-    const marks = Array(colLabels.length).fill('')
-    if(player.hand.some(card => card.category === categoryKey && card.name === name)){
-      marks[0] = '✓'
+  signInBtn.addEventListener('click', async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error(error);
+      authStatus.textContent = 'Sign-in failed';
     }
-    return { name, marks }
-  })
+  });
 
-  return {
-    labels: colLabels,
-    sus: buildRows(game.sus, 'sus'),
-    weap: buildRows(game.weap, 'weap'),
-    rooms: buildRows(game.rooms, 'rooms'),
-    generalNotes: ''
-  }
-}
+  signOutBtn.addEventListener('click', async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error(error);
+    }
+  });
 
-function loadNotes(){
-  if(!game || !player) return
-  try{
-    const raw = localStorage.getItem(notesKey())
-    noteState = raw ? JSON.parse(raw) : blankNotesForPlayer()
-  } catch {
-    noteState = blankNotesForPlayer()
-  }
-}
+  onAuthStateChanged(auth, (user) => {
+    currentUser = user || null;
+    if (user) {
+      authStatus.textContent = `Signed in as ${user.displayName || user.email || 'user'}`;
+    } else {
+      authStatus.textContent = 'Not signed in';
+    }
+  });
 
-function saveNotes(){
-  if(!noteState) return
-  localStorage.setItem(notesKey(), JSON.stringify(noteState))
-  setStatus('Saved automatically on this device.')
-}
-
-function markClass(value){
-  if(value === '✓') return 'mark state-check'
-  if(value === 'X') return 'mark state-x'
-  if(value === '•') return 'mark state-dot'
-  return 'mark'
-}
-
-function cycleMark(sectionKey, rowIndex, colIndex){
-  const current = noteState[sectionKey][rowIndex].marks[colIndex] || ''
-  const i = MARKS.indexOf(current)
-  const next = MARKS[(i + 1) % MARKS.length]
-  noteState[sectionKey][rowIndex].marks[colIndex] = next
-  saveNotes()
-  renderPlayer()
-}
-
-function renderSection(html, rows, sectionClass, label, key){
-  html.push(`<tr class="section ${sectionClass}"><td colspan="${noteState.labels.length + 1}">${label}</td></tr>`)
-  rows.forEach((row, rowIndex) => {
-    html.push(`<tr><td class="card">${row.name}</td>`)
-    row.marks.forEach((mark, colIndex) => {
-      html.push(`<td><button class="${markClass(mark)}" onclick="cycleMark('${key}', ${rowIndex}, ${colIndex})">${mark}</button></td>`)
-    })
-    html.push(`</tr>`)
-  })
-}
-
-function renderPlayer(){
-  if(!player || !noteState){
-    playerArea.innerHTML = ''
-    return
+  function p(x){
+    return x.split('\n').map(a => a.trim()).filter(Boolean);
   }
 
-  const handCardsHtml = player.hand.length
-    ? player.hand.map(card => {
-        const label = card.category === 'sus' ? 'Suspect' : card.category === 'weap' ? 'Weapon' : 'Room'
-        const cls = card.category === 'sus' ? 'sus' : card.category === 'weap' ? 'weap' : 'room'
-        return `
-          <div class="my-card">
-            <div class="my-card-head ${cls}">${label}</div>
-            <div class="my-card-body">${card.name}</div>
-          </div>
-        `
-      }).join('')
-    : '<div class="small">No cards</div>'
-
-  const html = []
-  html.push(`<div class="sheet-title">${game.name || 'Detective Notes'}</div>`)
-  html.push(`<div class="sheet-sub">${player.name}</div>`)
-  html.push(`
-    <div class="player-box">
-      <strong>Your cards</strong>
-      <div class="my-cards-list">${handCardsHtml}</div>
-    </div>
-  `)
-
-  html.push('<div class="sheet-wrap"><table><thead><tr><th class="card">Cards</th>')
-  noteState.labels.forEach(label => {
-    html.push(`<th>${label}</th>`)
-  })
-  html.push('</tr></thead><tbody>')
-
-  renderSection(html, noteState.sus, 'sec-sus', 'Suspects', 'sus')
-  renderSection(html, noteState.weap, 'sec-weap', 'Weapons', 'weap')
-  renderSection(html, noteState.rooms, 'sec-room', 'Rooms', 'rooms')
-
-  html.push('</tbody></table></div>')
-
-  html.push(`
-    <div class="player-box">
-      <div><b>How to mark:</b> tap a box to cycle blank → ✓ → X → •</div>
-      <div class="small">✓ = seen/have, X = ruled out, • = maybe</div>
-    </div>
-    <div class="notes-box">
-      <label for="notesText">Detective notes</label>
-      <textarea id="notesText" placeholder="Turn-by-turn notes, reveals, guesses, and logic...">${(noteState.generalNotes || '').replace(/</g, '&lt;')}</textarea>
-    </div>
-  `)
-
-  playerArea.innerHTML = html.join('')
-
-  document.getElementById('notesText').addEventListener('input', (e) => {
-    noteState.generalNotes = e.target.value
-    saveNotes()
-  })
-}
-
-function startGame(){
-  const template = {
-    name: boardNameEl.value.trim(),
-    players: p(playersEl.value),
-    sus: p(susEl.value),
-    weap: p(weapEl.value),
-    rooms: p(roomsEl.value)
+  function sh(arr){
+    const copy = [...arr];
+    for(let i = copy.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
   }
 
-  if(template.players.length < 2){
-    alert('Need at least 2 players')
-    return
-  }
-  if(!template.sus.length || !template.weap.length || !template.rooms.length){
-    alert('Add suspects, weapons, and rooms')
-    return
+  function enc(o){
+    return btoa(unescape(encodeURIComponent(JSON.stringify(o))));
   }
 
-  game = buildGame(template)
-  player = null
-  noteState = null
-  hostUnlocked = true
-
-  const url = location.origin + location.pathname + '?g=' + enc(game)
-  linkEl.value = url
-  history.replaceState(null, '', '?g=' + enc(game))
-
-  fillAcc()
-  fillCodes()
-  updateHostView()
-
-  res.textContent = ''
-  res.className = 'result'
-  sol.classList.add('hidden')
-  sol.textContent = ''
-
-  renderPlayer()
-  setStatus('Game created.')
-}
-
-function unlockHost(){
-  if(!game){
-    alert('Start or open a game first.')
-    return
+  function dec(s){
+    return JSON.parse(decodeURIComponent(escape(atob(s))));
   }
-  if(hostPinInput.value.trim() !== String(game.hostPin)){
-    alert('Wrong host PIN')
-    return
+
+  function makeCode(existing){
+    let code;
+    do {
+      code = String(Math.floor(1000 + Math.random() * 9000));
+    } while(existing.has(code));
+    existing.add(code);
+    return code;
   }
-  hostUnlocked = true
-  updateHostView()
-}
 
-function checkAcc(){
-  if(!game) return
-  const ok =
-    a1.value === game.solution.sus &&
-    a2.value === game.solution.weap &&
-    a3.value === game.solution.room
+  const MARKS = ['', '✓', 'X', '•'];
 
-  res.textContent = ok ? 'Correct — mystery solved' : 'Incorrect'
-  res.className = 'result ' + (ok ? 'ok' : 'bad')
-}
+  let game = null;
+  let player = null;
+  let noteState = null;
+  let hostUnlocked = false;
 
-function reveal(){
-  if(!game) return
-  sol.classList.remove('hidden')
-  sol.textContent = `Suspect: ${game.solution.sus}, Weapon: ${game.solution.weap}, Room: ${game.solution.room}`
-}
+  const boardNameEl = document.getElementById('boardName');
+  const playersEl = document.getElementById('players');
+  const susEl = document.getElementById('sus');
+  const weapEl = document.getElementById('weap');
+  const roomsEl = document.getElementById('rooms');
+  const linkEl = document.getElementById('link');
+  const codesEl = document.getElementById('codes');
+  const playerArea = document.getElementById('playerArea');
+  const statusText = document.getElementById('statusText');
+  const hostLockedEl = document.getElementById('hostLocked');
+  const hostUnlockedEl = document.getElementById('hostUnlocked');
+  const hostPinInput = document.getElementById('hostPinInput');
+  const hostPinDisplay = document.getElementById('hostPinDisplay');
+  const a1 = document.getElementById('a1');
+  const a2 = document.getElementById('a2');
+  const a3 = document.getElementById('a3');
+  const res = document.getElementById('res');
+  const sol = document.getElementById('sol');
 
-function join(){
-  if(!game){
-    alert('Open a game link first or start a game.')
-    return
+  function setStatus(text){
+    statusText.textContent = text;
   }
-  const c = document.getElementById('code').value.trim()
-  const found = game.players.find(x => String(x.code) === c)
-  if(!found){
-    alert('Wrong code')
-    return
+
+  function buildGame(template){
+    const s = sh(template.sus);
+    const w = sh(template.weap);
+    const r = sh(template.rooms);
+
+    const solution = {
+      sus: s[0],
+      weap: w[0],
+      room: r[0]
+    };
+
+    const deck = sh([
+      ...s.slice(1).map(x => ({category:'sus', name:x})),
+      ...w.slice(1).map(x => ({category:'weap', name:x})),
+      ...r.slice(1).map(x => ({category:'rooms', name:x}))
+    ]);
+
+    const used = new Set();
+    const playersArr = template.players.map(n => ({
+      name:n,
+      hand:[],
+      code:makeCode(used)
+    }));
+
+    deck.forEach((card, i) => {
+      playersArr[i % playersArr.length].hand.push(card);
+    });
+
+    const hostPin = makeCode(used);
+
+    return {
+      name: template.name || 'Custom Clue',
+      players: playersArr,
+      sus: template.sus,
+      weap: template.weap,
+      rooms: template.rooms,
+      solution,
+      hostPin
+    };
   }
-  player = found
-  loadNotes()
-  renderPlayer()
-  setStatus(`Loaded ${player.name}'s notes.`)
-}
 
-function copyLink(){
-  const text = linkEl.value.trim()
-  if(!text){
-    alert('Start a game first')
-    return
+  function fillAcc(){
+    if(!game) return;
+    a1.innerHTML = '';
+    a2.innerHTML = '';
+    a3.innerHTML = '';
+    game.sus.forEach(x => a1.innerHTML += `<option>${x}</option>`);
+    game.weap.forEach(x => a2.innerHTML += `<option>${x}</option>`);
+    game.rooms.forEach(x => a3.innerHTML += `<option>${x}</option>`);
   }
-  navigator.clipboard.writeText(text).then(() => {
-    setStatus('Game link copied.')
-  }).catch(() => {
-    setStatus('Copy failed. Copy it manually.')
-  })
-}
 
-function loadClassic(){
-  boardNameEl.value = 'Classic Clue'
-  playersEl.value = 'Alex\nSam\nJordan\nMia'
-  susEl.value = 'Miss Scarlet\nColonel Mustard\nMrs. White\nMr. Green\nMrs. Peacock\nProfessor Plum'
-  weapEl.value = 'Candlestick\nKnife\nLead Pipe\nRevolver\nRope\nWrench'
-  roomsEl.value = 'Kitchen\nBallroom\nConservatory\nDining Room\nBilliard Room\nLibrary\nLounge\nHall\nStudy'
-  setStatus('Classic Clue loaded.')
-}
-
-document.getElementById('startBtn').addEventListener('click', startGame)
-document.getElementById('unlockHostBtn').addEventListener('click', unlockHost)
-document.getElementById('checkBtn').addEventListener('click', checkAcc)
-document.getElementById('revealBtn').addEventListener('click', reveal)
-document.getElementById('joinBtn').addEventListener('click', join)
-document.getElementById('copyLinkBtn').addEventListener('click', copyLink)
-document.getElementById('copyGameLinkBtn').addEventListener('click', copyLink)
-document.getElementById('loadClassicBtn').addEventListener('click', loadClassic)
-
-const params = new URLSearchParams(location.search)
-if(params.get('g')){
-  try{
-    game = dec(params.get('g'))
-    linkEl.value = location.href
-    fillAcc()
-    fillCodes()
-    hostUnlocked = false
-    updateHostView()
-
-    boardNameEl.value = game.name || ''
-    playersEl.value = game.players.map(p => p.name).join('\n')
-    susEl.value = game.sus.join('\n')
-    weapEl.value = game.weap.join('\n')
-    roomsEl.value = game.rooms.join('\n')
-
-    setStatus('Game loaded from link.')
-  } catch(e){
-    setStatus('Could not load game from link.')
+  function fillCodes(){
+    if(!game) return;
+    codesEl.innerHTML = '';
+    game.players.forEach(p => {
+      codesEl.innerHTML += `<div class="code-row"><span>${p.name}</span><span class="code">${p.code}</span></div>`;
+    });
+    hostPinDisplay.textContent = game.hostPin;
   }
-} else {
-  hostUnlocked = false
-  updateHostView()
-}
 
-window.cycleMark = cycleMark
+  function updateHostView(){
+    hostLockedEl.classList.toggle('hidden', hostUnlocked);
+    hostUnlockedEl.classList.toggle('hidden', !hostUnlocked);
+  }
+
+  function notesKey(){
+    return 'clue-notes-' + enc({game: game.name, player: player.code}).slice(0, 100);
+  }
+
+  function blankNotesForPlayer(){
+    if(!game || !player) return null;
+
+    const otherPlayers = game.players
+      .filter(p => p.code !== player.code)
+      .map(p => p.name);
+
+    const colLabels = ['ME', ...otherPlayers];
+
+    const buildRows = (items, categoryKey) => items.map(name => {
+      const marks = Array(colLabels.length).fill('');
+      if(player.hand.some(card => card.category === categoryKey && card.name === name)){
+        marks[0] = '✓';
+      }
+      return { name, marks };
+    });
+
+    return {
+      labels: colLabels,
+      sus: buildRows(game.sus, 'sus'),
+      weap: buildRows(game.weap, 'weap'),
+      rooms: buildRows(game.rooms, 'rooms'),
+      generalNotes: ''
+    };
+  }
+
+  function loadNotes(){
+    if(!game || !player) return;
+    try{
+      const raw = localStorage.getItem(notesKey());
+      noteState = raw ? JSON.parse(raw) : blankNotesForPlayer();
+    } catch {
+      noteState = blankNotesForPlayer();
+    }
+  }
+
+  function saveNotes(){
+    if(!noteState) return;
+    localStorage.setItem(notesKey(), JSON.stringify(noteState));
+    setStatus('Saved automatically on this device.');
+  }
+
+  function markClass(value){
+    if(value === '✓') return 'mark state-check';
+    if(value === 'X') return 'mark state-x';
+    if(value === '•') return 'mark state-dot';
+    return 'mark';
+  }
+
+  function cycleMark(sectionKey, rowIndex, colIndex){
+    const current = noteState[sectionKey][rowIndex].marks[colIndex] || '';
+    const i = MARKS.indexOf(current);
+    const next = MARKS[(i + 1) % MARKS.length];
+    noteState[sectionKey][rowIndex].marks[colIndex] = next;
+    saveNotes();
+    renderPlayer();
+  }
+
+  function renderSection(html, rows, sectionClass, label, key){
+    html.push(`<tr class="section ${sectionClass}"><td colspan="${noteState.labels.length + 1}">${label}</td></tr>`);
+    rows.forEach((row, rowIndex) => {
+      html.push(`<tr><td class="card">${row.name}</td>`);
+      row.marks.forEach((mark, colIndex) => {
+        html.push(`<td><button class="${markClass(mark)}" onclick="cycleMark('${key}', ${rowIndex}, ${colIndex})">${mark}</button></td>`);
+      });
+      html.push(`</tr>`);
+    });
+  }
+
+  function renderPlayer(){
+    if(!player || !noteState){
+      playerArea.innerHTML = '';
+      return;
+    }
+
+    const handCardsHtml = player.hand.length
+      ? player.hand.map(card => {
+          const label = card.category === 'sus' ? 'Suspect' : card.category === 'weap' ? 'Weapon' : 'Room';
+          const cls = card.category === 'sus' ? 'sus' : card.category === 'weap' ? 'weap' : 'room';
+          return `
+            <div class="my-card">
+              <div class="my-card-head ${cls}">${label}</div>
+              <div class="my-card-body">${card.name}</div>
+            </div>
+          `;
+        }).join('')
+      : '<div class="small">No cards</div>';
+
+    const html = [];
+    html.push(`<div class="sheet-title">${game.name || 'Detective Notes'}</div>`);
+    html.push(`<div class="sheet-sub">${player.name}</div>`);
+    html.push(`
+      <div class="player-box">
+        <strong>Your cards</strong>
+        <div class="my-cards-list">${handCardsHtml}</div>
+      </div>
+    `);
+
+    html.push('<div class="sheet-wrap"><table><thead><tr><th class="card">Cards</th>');
+    noteState.labels.forEach(label => {
+      html.push(`<th>${label}</th>`);
+    });
+    html.push('</tr></thead><tbody>');
+
+    renderSection(html, noteState.sus, 'sec-sus', 'Suspects', 'sus');
+    renderSection(html, noteState.weap, 'sec-weap', 'Weapons', 'weap');
+    renderSection(html, noteState.rooms, 'sec-room', 'Rooms', 'rooms');
+
+    html.push('</tbody></table></div>');
+
+    html.push(`
+      <div class="player-box">
+        <div><b>How to mark:</b> tap a box to cycle blank → ✓ → X → •</div>
+        <div class="small">✓ = seen/have, X = ruled out, • = maybe</div>
+      </div>
+      <div class="notes-box">
+        <label for="notesText">Detective notes</label>
+        <textarea id="notesText" placeholder="Turn-by-turn notes, reveals, guesses, and logic...">${(noteState.generalNotes || '').replace(/</g, '&lt;')}</textarea>
+      </div>
+    `);
+
+    playerArea.innerHTML = html.join('');
+
+    document.getElementById('notesText').addEventListener('input', (e) => {
+      noteState.generalNotes = e.target.value;
+      saveNotes();
+    });
+  }
+
+  function startGame(){
+    const template = {
+      name: boardNameEl.value.trim(),
+      players: p(playersEl.value),
+      sus: p(susEl.value),
+      weap: p(weapEl.value),
+      rooms: p(roomsEl.value)
+    };
+
+    if(template.players.length < 2){
+      alert('Need at least 2 players');
+      return;
+    }
+    if(!template.sus.length || !template.weap.length || !template.rooms.length){
+      alert('Add suspects, weapons, and rooms');
+      return;
+    }
+
+    game = buildGame(template);
+    player = null;
+    noteState = null;
+    hostUnlocked = true;
+
+    const url = location.origin + location.pathname + '?g=' + enc(game);
+    linkEl.value = url;
+    history.replaceState(null, '', '?g=' + enc(game));
+
+    fillAcc();
+    fillCodes();
+    updateHostView();
+
+    res.textContent = '';
+    res.className = 'result';
+    sol.classList.add('hidden');
+    sol.textContent = '';
+
+    renderPlayer();
+    setStatus('Game created.');
+  }
+
+  function unlockHost(){
+    if(!game){
+      alert('Start or open a game first.');
+      return;
+    }
+    if(hostPinInput.value.trim() !== String(game.hostPin)){
+      alert('Wrong host PIN');
+      return;
+    }
+    hostUnlocked = true;
+    updateHostView();
+  }
+
+  function checkAcc(){
+    if(!game) return;
+    const ok =
+      a1.value === game.solution.sus &&
+      a2.value === game.solution.weap &&
+      a3.value === game.solution.room;
+
+    res.textContent = ok ? 'Correct — mystery solved' : 'Incorrect';
+    res.className = 'result ' + (ok ? 'ok' : 'bad');
+  }
+
+  function reveal(){
+    if(!game) return;
+    sol.classList.remove('hidden');
+    sol.textContent = `Suspect: ${game.solution.sus}, Weapon: ${game.solution.weap}, Room: ${game.solution.room}`;
+  }
+
+  function join(){
+    if(!game){
+      alert('Open a game link first or start a game.');
+      return;
+    }
+    const c = document.getElementById('code').value.trim();
+    const found = game.players.find(x => String(x.code) === c);
+    if(!found){
+      alert('Wrong code');
+      return;
+    }
+    player = found;
+    loadNotes();
+    renderPlayer();
+    setStatus(`Loaded ${player.name}'s notes.`);
+  }
+
+  function copyLink(){
+    const text = linkEl.value.trim();
+    if(!text){
+      alert('Start a game first');
+      return;
+    }
+    navigator.clipboard.writeText(text).then(() => {
+      setStatus('Game link copied.');
+    }).catch(() => {
+      setStatus('Copy failed. Copy it manually.');
+    });
+  }
+
+  function loadClassic(){
+    boardNameEl.value = 'Classic Clue';
+    playersEl.value = 'Alex\nSam\nJordan\nMia';
+    susEl.value = 'Miss Scarlet\nColonel Mustard\nMrs. White\nMr. Green\nMrs. Peacock\nProfessor Plum';
+    weapEl.value = 'Candlestick\nKnife\nLead Pipe\nRevolver\nRope\nWrench';
+    roomsEl.value = 'Kitchen\nBallroom\nConservatory\nDining Room\nBilliard Room\nLibrary\nLounge\nHall\nStudy';
+    setStatus('Classic Clue loaded.');
+  }
+
+  document.getElementById('startBtn').addEventListener('click', startGame);
+  document.getElementById('unlockHostBtn').addEventListener('click', unlockHost);
+  document.getElementById('checkBtn').addEventListener('click', checkAcc);
+  document.getElementById('revealBtn').addEventListener('click', reveal);
+  document.getElementById('joinBtn').addEventListener('click', join);
+  document.getElementById('copyLinkBtn').addEventListener('click', copyLink);
+  document.getElementById('copyGameLinkBtn').addEventListener('click', copyLink);
+  document.getElementById('loadClassicBtn').addEventListener('click', loadClassic);
+
+  const params = new URLSearchParams(location.search);
+  if(params.get('g')){
+    try{
+      game = dec(params.get('g'));
+      linkEl.value = location.href;
+      fillAcc();
+      fillCodes();
+      hostUnlocked = false;
+      updateHostView();
+
+      boardNameEl.value = game.name || '';
+      playersEl.value = game.players.map(p => p.name).join('\n');
+      susEl.value = game.sus.join('\n');
+      weapEl.value = game.weap.join('\n');
+      roomsEl.value = game.rooms.join('\n');
+
+      setStatus('Game loaded from link.');
+    } catch(e){
+      setStatus('Could not load game from link.');
+    }
+  } else {
+    hostUnlocked = false;
+    updateHostView();
+  }
+
+  window.cycleMark = cycleMark;
 </script>
 </body>
 </html>
