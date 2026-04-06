@@ -444,6 +444,8 @@
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
+  import { setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  await setPersistence(auth, browserLocalPersistence);
   const db = getDatabase(app);
 
   let currentUser = null;
@@ -514,15 +516,19 @@
       console.error("getRedirectResult error:", error);
       authStatus.textContent = `Redirect failed: ${error.code || error.message}`;
     });
-
+  
+  
   onAuthStateChanged(auth, (user) => {
+  setTimeout(() => {
     currentUser = user || null;
+
     if (user) {
       authStatus.textContent = `Signed in as ${user.displayName || user.email || "user"}`;
     } else {
       authStatus.textContent = "Not signed in";
     }
-  });
+  }, 200);
+});
 
   function p(x){
     return x.split('\n').map(a => a.trim()).filter(Boolean);
