@@ -419,6 +419,7 @@
   import {
     getAuth,
     GoogleAuthProvider,
+    signInWithPopup,
     signInWithRedirect,
     getRedirectResult,
     onAuthStateChanged,
@@ -447,8 +448,6 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getDatabase(app);
-
-  await setPersistence(auth, browserLocalPersistence);
 
   let currentUser = null;
   let currentRoom = null;
@@ -487,16 +486,36 @@
     statusText.textContent = text;
   }
 
-  signInBtn.addEventListener('click', async () => {
+  authStatus.textContent = "Checking sign-in...";
+
+  try {
+    await setPersistence(auth, browserLocalPersistence);
+  } catch (error) {
+    console.error("setPersistence error:", error);
+    authStatus.textContent = `Persistence failed: ${error.code || error.message}`;
+  }
+
+  async function handleGoogleSignIn() {
+    const provider = new GoogleAuthProvider();
+
     try {
-      authStatus.textContent = "Redirecting to Google...";
-      const provider = new GoogleAuthProvider();
-      await signInWithRedirect(auth, provider);
+      authStatus.textContent = "Opening Google sign-in...";
+      await signInWithPopup(auth, provider);
     } catch (error) {
-      console.error("signInWithRedirect error:", error);
-      authStatus.textContent = `Sign-in failed: ${error.code || error.message}`;
+      console.error("signInWithPopup error:", error);
+
+      // Fallback to redirect if popup is blocked or fails
+      try {
+        authStatus.textContent = "Popup failed, redirecting to Google...";
+        await signInWithRedirect(auth, provider);
+      } catch (redirectError) {
+        console.error("signInWithRedirect fallback error:", redirectError);
+        authStatus.textContent = `Sign-in failed: ${redirectError.code || redirectError.message}`;
+      }
     }
-  });
+  }
+
+  signInBtn.addEventListener('click', handleGoogleSignIn);
 
   signOutBtn.addEventListener('click', async () => {
     try {
@@ -519,14 +538,12 @@
   }
 
   onAuthStateChanged(auth, (user) => {
-    setTimeout(() => {
-      currentUser = user || null;
-      if (user) {
-        authStatus.textContent = `Signed in as ${user.displayName || user.email || "user"}`;
-      } else {
-        authStatus.textContent = "Not signed in";
-      }
-    }, 200);
+    currentUser = user || null;
+    if (user) {
+      authStatus.textContent = `Signed in as ${user.displayName || user.email || "user"}`;
+    } else {
+      authStatus.textContent = "Not signed in";
+    }
   });
 
   function p(x){
